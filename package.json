@@ -4,9 +4,10 @@
   "description": "VoiceSphere – Global Accessible Voice Community: A privacy-first, disability-inclusive social audio platform",
   "license": "AGPL-3.0",
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev",
     "build": "next build",
-    "start": "node server.js",
+    "start": "next start",
+    "server": "node standalone-server.js",
     "lint": "next lint",
     "test": "vitest run"
   },
