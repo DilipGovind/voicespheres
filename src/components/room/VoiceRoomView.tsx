@@ -98,6 +98,10 @@ export function VoiceRoomView({
       return [...prev, currentUser];
     });
 
+    webRTCManager.setSignalSender((targetUserId, signal) => {
+      realtimeClient.sendSignal(targetUserId, signal);
+    });
+
     realtimeClient.joinRoom(room.id, currentUser);
 
     // Acquire microphone if joining as speaker
@@ -135,12 +139,38 @@ export function VoiceRoomView({
       captionEngineRef.current.start();
     }
 
-    // Subscribe to realtime socket events
+    // Subscribe to realtime socket & cross-device mesh events
+    const unsubHeartbeat = realtimeClient.on('presence:heartbeat', (data: { user: Participant }) => {
+      if (data?.user && data.user.id !== currentUserId) {
+        setParticipants((prev) => {
+          const index = prev.findIndex((p) => p.id === data.user.id);
+          if (index === -1) {
+            announce(`${data.user.name} joined the room`, 'polite');
+            webRTCManager.connectPeer(data.user.id, false);
+            return [...prev, data.user];
+          }
+          const updated = [...prev];
+          updated[index] = { ...updated[index], ...data.user };
+          return updated;
+        });
+      }
+    });
+
+    const unsubSignal = realtimeClient.on(
+      'webrtc:signal',
+      (data: { senderUserId: string; targetUserId: string; signal: any }) => {
+        if (data?.targetUserId === currentUserId && data.senderUserId) {
+          webRTCManager.handleIncomingSignal(data.senderUserId, data.signal);
+        }
+      }
+    );
+
     const unsubJoin = realtimeClient.on('user:joined', (data: { user: Participant }) => {
-      if (data?.user) {
+      if (data?.user && data.user.id !== currentUserId) {
         setParticipants((prev) => {
           if (prev.some((p) => p.id === data.user.id)) return prev;
           announce(`${data.user.name} joined the room`, 'polite');
+          webRTCManager.connectPeer(data.user.id, true);
           return [...prev, data.user];
         });
       }
@@ -148,6 +178,7 @@ export function VoiceRoomView({
 
     const unsubLeave = realtimeClient.on('user:left', (data: { userId: string }) => {
       if (data?.userId) {
+        webRTCManager.removePeer(data.userId);
         setParticipants((prev) => {
           const departing = prev.find((p) => p.id === data.userId);
           if (departing) announce(`${departing.name} left the room`, 'polite');
@@ -225,11 +256,25 @@ export function VoiceRoomView({
       announce(`Room moved to stage: ${data.stage}`, 'polite');
     });
 
+    const handleUnload = () => {
+      realtimeClient.leaveRoom(room.id, currentUserId);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleUnload);
+      window.addEventListener('pagehide', handleUnload);
+    }
+
     return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('beforeunload', handleUnload);
+        window.removeEventListener('pagehide', handleUnload);
+      }
       captionEngineRef.current?.stop();
       audioMeterRef.current?.stop();
       webRTCManager.stopLocalStream();
       realtimeClient.leaveRoom(room.id, currentUserId);
+      unsubHeartbeat();
+      unsubSignal();
       unsubJoin();
       unsubLeave();
       unsubMute();

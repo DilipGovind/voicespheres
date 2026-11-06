@@ -67,6 +67,12 @@ export default function Home() {
     try {
       const savedUser = localStorage.getItem('voicesphere_username');
       if (savedUser) setCurrentUserName(savedUser);
+      let savedId = localStorage.getItem('voicesphere_user_id');
+      if (!savedId) {
+        savedId = 'user_' + Math.random().toString(36).substring(2, 9);
+        localStorage.setItem('voicesphere_user_id', savedId);
+      }
+      setCurrentUserId(savedId);
 
       // Load user created rooms from localStorage
       let allCombinedRooms = [...INITIAL_COMMUNITY_ROOMS];
