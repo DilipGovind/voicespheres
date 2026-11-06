@@ -104,6 +104,15 @@ export function VoiceRoomView({
 
     realtimeClient.joinRoom(room.id, currentUser);
 
+    // Connect WebRTC audio mesh to any peers already in the room
+    if (room.participants && Array.isArray(room.participants)) {
+      room.participants.forEach((p) => {
+        if (p.id !== currentUserId) {
+          webRTCManager.connectPeer(currentUserId, p.id);
+        }
+      });
+    }
+
     // Acquire microphone if joining as speaker
     if (initialRole === 'speaker') {
       webRTCManager.acquireMicrophone().then((stream) => {
@@ -146,7 +155,7 @@ export function VoiceRoomView({
           const index = prev.findIndex((p) => p.id === data.user.id);
           if (index === -1) {
             announce(`${data.user.name} joined the room`, 'polite');
-            webRTCManager.connectPeer(data.user.id, false);
+            webRTCManager.connectPeer(currentUserId, data.user.id);
             return [...prev, data.user];
           }
           const updated = [...prev];
@@ -170,7 +179,7 @@ export function VoiceRoomView({
         setParticipants((prev) => {
           if (prev.some((p) => p.id === data.user.id)) return prev;
           announce(`${data.user.name} joined the room`, 'polite');
-          webRTCManager.connectPeer(data.user.id, true);
+          webRTCManager.connectPeer(currentUserId, data.user.id);
           return [...prev, data.user];
         });
       }
