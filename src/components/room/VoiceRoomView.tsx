@@ -8,6 +8,7 @@ import { realtimeClient } from '@/lib/socket-client';
 import { webRTCManager } from '@/lib/webrtc-manager';
 import { CaptionEngine } from '@/lib/caption-engine';
 import { AudioMeter } from '@/lib/audio-meter';
+import { AACSpeechEngine } from '@/lib/aac-speech-engine';
 import { StageStructuredBar } from './StageStructuredBar';
 import { ParticipantGrid } from './ParticipantGrid';
 import { ControlsBar } from './ControlsBar';
@@ -183,8 +184,31 @@ export function VoiceRoomView({
 
     const unsubCaption = realtimeClient.on('caption:new', (newCap: LiveCaptionItem) => {
       setCaptions((prev) => [...prev.slice(-30), newCap]);
-      if (settings.announcementFilters.speaking && newCap.speakerId !== currentUserId) {
-        announce(`${newCap.speakerName}: ${newCap.text}`, 'polite');
+
+      if (newCap.speakerId !== currentUserId) {
+        // Trigger visual speaking ripple on the sender
+        setActiveSpeakerId(newCap.speakerId);
+        setParticipants((prev) =>
+          prev.map((p) => (p.id === newCap.speakerId ? { ...p, isSpeaking: true } : p))
+        );
+        setTimeout(() => {
+          setParticipants((prev) =>
+            prev.map((p) => (p.id === newCap.speakerId ? { ...p, isSpeaking: false } : p))
+          );
+        }, 3500);
+
+        // If it's an AAC synthesized speech message and not quietMode, vocalize it
+        if (newCap.isAac && !settings.quietMode && !personallyMutedUserIds.has(newCap.speakerId)) {
+          const engine = AACSpeechEngine.getInstance();
+          engine.speak(newCap.text, {
+            rate: settings.aacSpeed,
+            pitch: settings.aacPitch,
+          });
+        }
+
+        if (settings.announcementFilters.speaking) {
+          announce(`${newCap.speakerName}: ${newCap.text}`, 'polite');
+        }
       }
     });
 
@@ -256,6 +280,31 @@ export function VoiceRoomView({
 
     // Announce
     announce(`You spoke via AAC: ${text}`, 'polite');
+  };
+
+  const handleSimulatePeerSpeech = () => {
+    const peers = participants.filter((p) => p.id !== currentUserId && p.role !== 'listener');
+    const speaker = peers.length > 0 ? peers[0] : { id: 'user_maya', name: 'Maya (Host)', avatar: 'MY' };
+
+    const demoPhrases = [
+      'Welcome everyone to VoiceSphere! Live speech captions and AAC tools are fully active.',
+      'I agree with this topic. Let us keep the conversation accessible and sensory friendly.',
+      'Thank you for allowing extra time to respond using AAC synthesized speech.',
+      'Could we please move to the next topic in our structured flow queue?',
+    ];
+    const phrase = demoPhrases[Math.floor(Math.random() * demoPhrases.length)];
+
+    const demoCaption: LiveCaptionItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      speakerId: speaker.id,
+      speakerName: speaker.name,
+      text: phrase,
+      timestamp: Date.now(),
+      isAac: true,
+      language: room.language,
+    };
+
+    realtimeClient.sendCaption(demoCaption);
   };
 
   // Moderator actions
@@ -331,7 +380,16 @@ export function VoiceRoomView({
           </div>
 
           {/* Quick Actions & Emergency Exit */}
-          <div className="flex items-center space-x-2.5 rtl:space-x-reverse self-start md:self-auto">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse self-start md:self-auto flex-wrap gap-y-1">
+            <button
+              type="button"
+              onClick={handleSimulatePeerSpeech}
+              aria-label="Simulate peer speaking to test audio ripples, speech synthesis, and live captions"
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold text-xs transition"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Simulate Peer Voice</span>
+            </button>
             <button
               type="button"
               onClick={() => setShareOpen(true)}
@@ -359,7 +417,7 @@ export function VoiceRoomView({
         />
 
         {/* Live Captions Display */}
-        <LiveCaptionsDisplay captions={captions} />
+        <LiveCaptionsDisplay captions={captions} isOpen={captionsOpen} />
 
         {/* Participant Grid */}
         <ParticipantGrid

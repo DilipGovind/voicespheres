@@ -69,6 +69,25 @@ export function AacToolbarModal({
     }
   }, [selectedVoice]);
 
+  // Keyboard shortcut handler for numeric keys 0-9
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea') return;
+
+      const matchedPhrase = MANDATORY_AAC_PHRASES.find((p) => p.shortcut === e.key);
+      if (matchedPhrase) {
+        e.preventDefault();
+        handleSpeakPhrase(matchedPhrase);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, selectedVoice, previewMode, settings.aacSpeed, settings.aacPitch]);
+
   if (!isOpen) return null;
 
   const handleSpeakPhrase = (card: AACSymbolCard) => {

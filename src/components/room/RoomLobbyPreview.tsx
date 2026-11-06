@@ -16,6 +16,8 @@ import {
   Sparkles,
   ArrowRight,
   User,
+  Share2,
+  Copy,
 } from 'lucide-react';
 
 interface RoomLobbyPreviewProps {
@@ -31,6 +33,19 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
   const [joinAsListenerOnly, setJoinAsListenerOnly] = useState(false);
   const [displayName, setDisplayName] = useState('InclusiveVoice');
   const [contentWarningAccepted, setContentWarningAccepted] = useState(!room.contentWarning?.enabled);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyLink = async () => {
+    try {
+      const url = `${window.location.origin}/?room=${encodeURIComponent(room.id)}`;
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      announce('Room invite link copied to clipboard.', 'polite');
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
 
   useEffect(() => {
     // Generate pseudonymous default name if saved
@@ -211,13 +226,24 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between pt-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-sm font-semibold transition"
-          >
-            Cancel
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              aria-label="Copy room invite link"
+              className="flex items-center space-x-1 px-3 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-yellow-300 text-xs sm:text-sm font-semibold transition"
+            >
+              {copiedLink ? <Check className="w-4 h-4 stroke-[3]" /> : <Share2 className="w-4 h-4" />}
+              <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
+            </button>
+          </div>
 
           <button
             type="button"

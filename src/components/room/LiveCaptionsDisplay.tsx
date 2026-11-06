@@ -7,9 +7,10 @@ import { Subtitles, Sparkles, MessageSquare } from 'lucide-react';
 
 interface LiveCaptionsDisplayProps {
   captions: LiveCaptionItem[];
+  isOpen?: boolean;
 }
 
-export function LiveCaptionsDisplay({ captions }: LiveCaptionsDisplayProps) {
+export function LiveCaptionsDisplay({ captions, isOpen = true }: LiveCaptionsDisplayProps) {
   const { settings } = useAccessibility();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -17,7 +18,7 @@ export function LiveCaptionsDisplay({ captions }: LiveCaptionsDisplayProps) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [captions]);
 
-  if (!settings.captionsEnabled) return null;
+  if (!isOpen && !settings.captionsEnabled) return null;
 
   // Font size classes
   const fontSizes = {

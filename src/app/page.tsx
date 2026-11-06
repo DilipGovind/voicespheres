@@ -170,6 +170,8 @@ export default function Home() {
         <Navbar
           onOpenAccessibility={() => setIsA11yCenterOpen(true)}
           onCreateRoom={() => setIsCreateRoomOpen(true)}
+          onOpenProfile={() => setIsProfileOpen(true)}
+          currentUserName={currentUserName}
           inRoom={true}
         />
 
@@ -196,6 +198,8 @@ export default function Home() {
       <Navbar
         onOpenAccessibility={() => setIsA11yCenterOpen(true)}
         onCreateRoom={() => setIsCreateRoomOpen(true)}
+        onOpenProfile={() => setIsProfileOpen(true)}
+        currentUserName={currentUserName}
         inRoom={false}
       />
 

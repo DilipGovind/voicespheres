@@ -11,15 +11,24 @@ import {
   PlusCircle,
   Radio,
   BookOpen,
+  User,
 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenAccessibility: () => void;
   onCreateRoom: () => void;
+  onOpenProfile?: () => void;
+  currentUserName?: string;
   inRoom?: boolean;
 }
 
-export function Navbar({ onOpenAccessibility, onCreateRoom, inRoom = false }: NavbarProps) {
+export function Navbar({
+  onOpenAccessibility,
+  onCreateRoom,
+  onOpenProfile,
+  currentUserName,
+  inRoom = false,
+}: NavbarProps) {
   const { settings } = useAccessibility();
   const { locale, setLocale, localeInfo, t } = useI18n();
   const [langMenuOpen, setLangMenuOpen] = useState(false);
@@ -118,6 +127,19 @@ export function Navbar({ onOpenAccessibility, onCreateRoom, inRoom = false }: Na
               {settings.preset === 'DEFAULT' ? 'A11Y' : settings.preset.split('_')[0]}
             </span>
           </button>
+
+          {/* Profile Shortcut */}
+          {onOpenProfile && (
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              aria-label={`User profile for ${currentUserName || 'User'}`}
+              className="flex items-center space-x-1.5 px-3 py-1.5 sm:py-2 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs sm:text-sm font-semibold transition"
+            >
+              <User className="w-4 h-4 text-blue-400" />
+              <span className="hidden lg:inline">{currentUserName || 'Profile'}</span>
+            </button>
+          )}
 
           {/* Create Room Button (When not inside a room) */}
           {!inRoom && (
