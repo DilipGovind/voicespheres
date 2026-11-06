@@ -46,6 +46,25 @@ class RealtimeClient {
     }
   }
 
+  private initGlobalMesh() {
+    if (typeof window === 'undefined') return;
+    try {
+      const globalSource = new EventSource('https://ntfy.sh/voicesphere_v2_global_rooms/sse');
+      globalSource.onmessage = (event) => {
+        try {
+          const raw = JSON.parse(event.data);
+          if (raw.event === 'message' && raw.message) {
+            const parsed = JSON.parse(raw.message);
+            if (parsed && parsed.senderSessionId !== this.sessionId) {
+              this.handleIncomingEvent(parsed.type, parsed.data);
+            }
+          }
+        } catch {}
+      };
+      globalSource.onerror = () => {};
+    } catch {}
+  }
+
   private getCleanTopicName(roomId: string): string {
     const cleanId = roomId.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
     return `voicesphere_v2_${cleanId}`;
@@ -179,7 +198,11 @@ class RealtimeClient {
    * 3. Socket.io (if self-hosted)
    */
   public publishMeshEvent(type: string, data: any) {
-    if (!this.roomId) return;
+    const isGlobal = type.startsWith('global:');
+    if (!this.roomId && !isGlobal) return;
+
+    // Trigger local listeners
+    this.trigger(type, data);
 
     const payload: RealtimeEventPayload = {
       type,
@@ -190,7 +213,7 @@ class RealtimeClient {
     };
 
     // 1. Publish to global cloud mesh (port 443 HTTPS)
-    const topic = this.getCleanTopicName(this.roomId);
+    const topic = isGlobal ? 'voicesphere_v2_global_rooms' : this.getCleanTopicName(this.roomId!);
     try {
       fetch(`https://ntfy.sh/${topic}`, {
         method: 'POST',
@@ -277,6 +300,10 @@ class RealtimeClient {
   /**
    * Leave Room: disconnects from cloud mesh and notifies peers
    */
+  public broadcastRoomCreated(room: any) {
+    this.publishMeshEvent('global:room_created', { room });
+  }
+
   public leaveRoom(roomId: string, userId: string) {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);

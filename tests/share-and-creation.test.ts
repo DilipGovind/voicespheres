@@ -1,7 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Room } from '../src/types/room';
+import { serializeRoomToUrl, deserializeRoomFromUrl } from '../src/lib/room-serializer';
+import { realtimeClient } from '../src/lib/socket-client';
 
-describe('Dynamic Room Creation and Sharing Architecture', () => {
+describe('Dynamic Room Creation and Cross-Platform Sharing Architecture', () => {
   it('allows unlimited creation of unique accessible rooms', () => {
     const createdRooms: Room[] = [];
 
@@ -46,50 +48,96 @@ describe('Dynamic Room Creation and Sharing Architecture', () => {
     expect(uniqueIds.size).toBe(25);
   });
 
-  it('generates valid direct share URLs and formatted accessible invitation text', () => {
-    const sampleRoom: Room = {
-      id: 'room_aac_inclusion_99',
-      name: 'AAC & Neurodiversity Hangout',
-      topic: 'Celebrating diverse speech patterns and alternative inputs',
-      description: 'Open to everyone',
-      category: 'speech_aac',
+  it('broadcasts created rooms to global mesh for cross-platform visibility', () => {
+    let capturedEvent: any = null;
+    const unsub = realtimeClient.on('global:room_created', (data) => {
+      capturedEvent = data;
+    });
+
+    const testRoom: Room = {
+      id: 'room_cross_plat_101',
+      name: 'Cross-Platform Community Room',
+      topic: 'Accessible on Android and Windows',
+      description: 'Open to all devices',
+      category: 'general',
       language: 'en',
       country: 'Global',
       isPrivate: false,
-      hostId: 'user_host',
+      hostId: 'user_101',
       createdAt: Date.now(),
       accessibilityFeatures: {
         captionsAvailable: true,
         textParticipation: true,
         aacSupport: true,
-        lowStimulation: true,
+        lowStimulation: false,
         structuredDiscussion: true,
         listeningOnlyAllowed: true,
         screenReaderOptimized: true,
-        quietRoom: true,
+        quietRoom: false,
       },
       structuredStage: {
-        currentStage: 'DISCUSSION',
-        stageTitle: 'Open Floor',
-        stageDescription: 'Community dialogue',
+        currentStage: 'INTRO',
+        stageTitle: 'Intro',
+        stageDescription: 'Welcome',
         speakingTimeLimitSeconds: 120,
-        activeSpeakerId: 'user_host',
+        activeSpeakerId: null,
         stageStartedAt: Date.now(),
         queue: [],
       },
       participants: [],
     };
 
-    const origin = 'https://voicesphere.vercel.app';
-    const shareUrl = `${origin}/?room=${encodeURIComponent(sampleRoom.id)}`;
-    expect(shareUrl).toBe('https://voicesphere.vercel.app/?room=room_aac_inclusion_99');
+    realtimeClient.broadcastRoomCreated(testRoom);
+    expect(capturedEvent).not.toBeNull();
+    expect(capturedEvent.room.name).toBe('Cross-Platform Community Room');
 
-    const formattedInvite =
-      `Join our accessible voice room on VoiceSphere: "${sampleRoom.name}"\n` +
-      `Topic: ${sampleRoom.topic}\n` +
-      `Link: ${shareUrl}`;
+    unsub();
+  });
 
-    expect(formattedInvite).toContain('AAC & Neurodiversity Hangout');
-    expect(formattedInvite).toContain('https://voicesphere.vercel.app/?room=room_aac_inclusion_99');
+  it('serializes and deserializes rooms faithfully for any device opening a link or QR code', () => {
+    const originalRoom: Room = {
+      id: 'room_portable_99',
+      name: 'Telugu & English AAC Lounge',
+      topic: 'Bilingual accessibility chat',
+      description: 'Full inclusive access',
+      category: 'speech_aac',
+      language: 'te',
+      country: 'Global',
+      isPrivate: false,
+      hostId: 'host_te',
+      createdAt: Date.now(),
+      accessibilityFeatures: {
+        captionsAvailable: true,
+        textParticipation: true,
+        aacSupport: true,
+        lowStimulation: true,
+        structuredDiscussion: false,
+        listeningOnlyAllowed: true,
+        screenReaderOptimized: true,
+        quietRoom: false,
+      },
+      structuredStage: {
+        currentStage: 'DISCUSSION',
+        stageTitle: 'Discussion',
+        stageDescription: 'Open',
+        speakingTimeLimitSeconds: 120,
+        activeSpeakerId: null,
+        stageStartedAt: Date.now(),
+        queue: [],
+      },
+      participants: [],
+    };
+
+    const urlString = serializeRoomToUrl(originalRoom, 'https://voicesphere.vercel.app');
+    const parsedUrl = new URL(urlString);
+    const reconstituted = deserializeRoomFromUrl(parsedUrl.searchParams);
+
+    expect(reconstituted).not.toBeNull();
+    expect(reconstituted?.id).toBe('room_portable_99');
+    expect(reconstituted?.name).toBe('Telugu & English AAC Lounge');
+    expect(reconstituted?.language).toBe('te');
+    expect(reconstituted?.accessibilityFeatures.captionsAvailable).toBe(true);
+    expect(reconstituted?.accessibilityFeatures.aacSupport).toBe(true);
+    expect(reconstituted?.accessibilityFeatures.lowStimulation).toBe(true);
   });
 });

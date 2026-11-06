@@ -16,6 +16,7 @@ import { VoiceRoomView } from '@/components/room/VoiceRoomView';
 import { UserProfileModal } from '@/components/profile/UserProfileModal';
 import { ShareRoomModal } from '@/components/room/ShareRoomModal';
 import { deserializeRoomFromUrl } from '@/lib/room-serializer';
+import { realtimeClient } from '@/lib/socket-client';
 import {
   Radio,
   Sliders,
@@ -39,6 +40,33 @@ export default function Home() {
   const [rooms, setRooms] = useState<Room[]>(INITIAL_COMMUNITY_ROOMS);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
   const [previewingRoom, setPreviewingRoom] = useState<Room | null>(null);
+  const [isRefreshingRooms, setIsRefreshingRooms] = useState(false);
+
+  const fetchRoomsFromServer = async (announceUpdate = false) => {
+    setIsRefreshingRooms(true);
+    try {
+      const res = await fetch('/api/rooms');
+      const data = await res.json();
+      if (data?.rooms && Array.isArray(data.rooms)) {
+        setRooms((prev) => {
+          const map = new Map<string, Room>();
+          INITIAL_COMMUNITY_ROOMS.forEach((r) => map.set(r.id, r));
+          prev.forEach((r) => map.set(r.id, r));
+          data.rooms.forEach((r: Room) => map.set(r.id, r));
+          return Array.from(map.values()).sort(
+            (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
+          );
+        });
+        if (announceUpdate) {
+          announce('Discovered latest community rooms across platforms.', 'polite');
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsRefreshingRooms(false);
+    }
+  };
 
   // User Profile
   const [currentUserId, setCurrentUserId] = useState<string>('user_' + Math.random().toString(36).substring(2, 9));
@@ -113,6 +141,42 @@ export default function Home() {
           }
         }
       }
+
+      // Initial server rooms fetch
+      fetchRoomsFromServer();
+
+      // Continuous background sync every 4.5 seconds for live room discovery across devices
+      const syncInterval = setInterval(() => {
+        fetchRoomsFromServer();
+      }, 4500);
+
+      // Listen for real-time room creation broadcast from other devices
+      const unsubRoomCreated = realtimeClient.on(
+        'global:room_created',
+        (payload: { room?: Room } | Room) => {
+          const createdRoom = (payload as any)?.room || payload;
+          if (createdRoom && createdRoom.id) {
+            setRooms((prev) => {
+              if (prev.some((r) => r.id === createdRoom.id)) return prev;
+              announce(`New community room opened: ${createdRoom.name}`, 'polite');
+              return [createdRoom, ...prev];
+            });
+            try {
+              const existing = localStorage.getItem('voicesphere_user_rooms');
+              const parsedList: Room[] = existing ? JSON.parse(existing) : [];
+              localStorage.setItem(
+                'voicesphere_user_rooms',
+                JSON.stringify([createdRoom, ...parsedList.filter((r) => r.id !== createdRoom.id)])
+              );
+            } catch {}
+          }
+        }
+      );
+
+      return () => {
+        clearInterval(syncInterval);
+        unsubRoomCreated();
+      };
     } catch {
       // ignore
     }
@@ -155,17 +219,20 @@ export default function Home() {
       // ignore
     }
 
-    // 3. Post to /api/rooms so other users opening the share link can fetch this room
+    // 3. Post to /api/rooms so all devices fetch this newly created room
     fetch('/api/rooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newRoom),
     }).catch(() => {});
 
-    // 4. Set active and update URL query param
+    // 4. Broadcast to global mesh across devices
+    realtimeClient.broadcastRoomCreated(newRoom);
+
+    // 5. Set active and update URL query param
     setActiveRoom(newRoom);
     updateUrlRoomParam(newRoom.id);
-    announce(`Created room: ${newRoom.name}. You can copy the invite link to share with others.`, 'polite');
+    announce(`Created room: ${newRoom.name}. Accessible across all devices.`, 'polite');
   };
 
   const handleLeaveRoom = () => {
@@ -305,6 +372,8 @@ export default function Home() {
             onSelectRoom={handleSelectRoom}
             onCreateRoom={() => setIsCreateRoomOpen(true)}
             onShareRoom={(room) => setShareModalRoom(room)}
+            onRefreshRooms={() => fetchRoomsFromServer(true)}
+            isRefreshing={isRefreshingRooms}
           />
         </section>
       </main>
