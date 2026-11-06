@@ -14,6 +14,7 @@ import { CreateRoomModal } from '@/components/discovery/CreateRoomModal';
 import { RoomLobbyPreview } from '@/components/room/RoomLobbyPreview';
 import { VoiceRoomView } from '@/components/room/VoiceRoomView';
 import { UserProfileModal } from '@/components/profile/UserProfileModal';
+import { ShareRoomModal } from '@/components/room/ShareRoomModal';
 import {
   Radio,
   Sliders,
@@ -47,16 +48,57 @@ export default function Home() {
   const [isA11yCenterOpen, setIsA11yCenterOpen] = useState(false);
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [shareModalRoom, setShareModalRoom] = useState<Room | null>(null);
+
+  // Sync URL query parameter without page reload
+  const updateUrlRoomParam = (roomId: string | null) => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (roomId) {
+      url.searchParams.set('room', roomId);
+    } else {
+      url.searchParams.delete('room');
+    }
+    window.history.pushState({}, '', url.toString());
+  };
 
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem('voicesphere_username');
       if (savedUser) setCurrentUserName(savedUser);
 
+      // Load user created rooms from localStorage
+      let allCombinedRooms = [...INITIAL_COMMUNITY_ROOMS];
       const savedRooms = localStorage.getItem('voicesphere_user_rooms');
       if (savedRooms) {
-        const parsed = JSON.parse(savedRooms);
-        setRooms([...parsed, ...INITIAL_COMMUNITY_ROOMS]);
+        const parsed: Room[] = JSON.parse(savedRooms);
+        allCombinedRooms = [...parsed, ...INITIAL_COMMUNITY_ROOMS];
+        setRooms(allCombinedRooms);
+      }
+
+      // Check if URL contains direct room invite link: ?room=<roomId>
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const urlRoomId = params.get('room');
+        if (urlRoomId) {
+          const matched = allCombinedRooms.find((r) => r.id === urlRoomId);
+          if (matched) {
+            setPreviewingRoom(matched);
+            announce(`Loaded shared room from link: ${matched.name}`, 'polite');
+          } else {
+            // Fetch dynamically created room from server API route
+            fetch(`/api/rooms?id=${encodeURIComponent(urlRoomId)}`)
+              .then((res) => res.json())
+              .then((data) => {
+                if (data?.room) {
+                  setRooms((prev) => [data.room, ...prev]);
+                  setPreviewingRoom(data.room);
+                  announce(`Loaded shared room from link: ${data.room.name}`, 'polite');
+                }
+              })
+              .catch(() => {});
+          }
+        }
       }
     } catch {
       // ignore
@@ -79,18 +121,38 @@ export default function Home() {
     setCurrentUserName(displayName);
     setInitialRole(joinAsListener ? 'listener' : 'speaker');
     setActiveRoom(previewingRoom);
+    updateUrlRoomParam(previewingRoom.id);
     setPreviewingRoom(null);
   };
 
   const handleCreateRoom = (newRoom: Room) => {
+    // 1. Add to local state
     const updated = [newRoom, ...rooms];
     setRooms(updated);
+
+    // 2. Persist in localStorage so unlimited rooms persist across sessions
     try {
-      localStorage.setItem('voicesphere_user_rooms', JSON.stringify([newRoom]));
+      const existing = localStorage.getItem('voicesphere_user_rooms');
+      const parsedList: Room[] = existing ? JSON.parse(existing) : [];
+      localStorage.setItem(
+        'voicesphere_user_rooms',
+        JSON.stringify([newRoom, ...parsedList.filter((r) => r.id !== newRoom.id)])
+      );
     } catch {
       // ignore
     }
+
+    // 3. Post to /api/rooms so other users opening the share link can fetch this room
+    fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRoom),
+    }).catch(() => {});
+
+    // 4. Set active and update URL query param
     setActiveRoom(newRoom);
+    updateUrlRoomParam(newRoom.id);
+    announce(`Created room: ${newRoom.name}. You can copy the invite link to share with others.`, 'polite');
   };
 
   const handleLeaveRoom = () => {
@@ -98,6 +160,7 @@ export default function Home() {
       announce(`Left room ${activeRoom.name}`, 'polite');
     }
     setActiveRoom(null);
+    updateUrlRoomParam(null);
   };
 
   // If currently inside an active room, render VoiceRoomView
@@ -224,11 +287,19 @@ export default function Home() {
             rooms={rooms}
             onSelectRoom={handleSelectRoom}
             onCreateRoom={() => setIsCreateRoomOpen(true)}
+            onShareRoom={(room) => setShareModalRoom(room)}
           />
         </section>
       </main>
 
       <Footer />
+
+      {/* Share Room Modal */}
+      <ShareRoomModal
+        room={shareModalRoom}
+        isOpen={Boolean(shareModalRoom)}
+        onClose={() => setShareModalRoom(null)}
+      />
 
       {/* Lobby Preview Modal */}
       {previewingRoom && (

@@ -17,15 +17,17 @@ import {
   Lock,
   ArrowRight,
   Filter,
+  Share2,
 } from 'lucide-react';
 
 interface RoomDiscoveryProps {
   rooms: Room[];
   onSelectRoom: (room: Room) => void;
   onCreateRoom: () => void;
+  onShareRoom?: (room: Room) => void;
 }
 
-export function RoomDiscovery({ rooms, onSelectRoom, onCreateRoom }: RoomDiscoveryProps) {
+export function RoomDiscovery({ rooms, onSelectRoom, onCreateRoom, onShareRoom }: RoomDiscoveryProps) {
   const { settings } = useAccessibility();
   const { t } = useI18n();
 
@@ -274,15 +276,31 @@ export function RoomDiscovery({ rooms, onSelectRoom, onCreateRoom }: RoomDiscove
                     )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => onSelectRoom(room)}
-                    aria-label={`Join room: ${room.name}`}
-                    className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-yellow-400 text-black hover:bg-yellow-300 font-bold text-xs shadow-md transition"
-                  >
-                    <span>Join Preview</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    {onShareRoom && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onShareRoom(room);
+                        }}
+                        aria-label={`Share link for room: ${room.name}`}
+                        className="p-2 rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:text-yellow-400 hover:border-yellow-400/50 transition"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => onSelectRoom(room)}
+                      aria-label={`Join room: ${room.name}`}
+                      className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-yellow-400 text-black hover:bg-yellow-300 font-bold text-xs shadow-md transition"
+                    >
+                      <span>Join Preview</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

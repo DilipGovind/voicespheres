@@ -13,6 +13,7 @@ import {
   Sliders,
   LogOut,
   ShieldAlert,
+  Share2,
 } from 'lucide-react';
 
 interface ControlsBarProps {
@@ -29,6 +30,7 @@ interface ControlsBarProps {
   onToggleAAC: () => void;
   onOpenAccessibility: () => void;
   onOpenReport: () => void;
+  onShareRoom?: () => void;
   onLeaveRoom: () => void;
 }
 
@@ -46,6 +48,7 @@ export function ControlsBar({
   onToggleAAC,
   onOpenAccessibility,
   onOpenReport,
+  onShareRoom,
   onLeaveRoom,
 }: ControlsBarProps) {
   const { settings, announce } = useAccessibility();
@@ -141,6 +144,18 @@ export function ControlsBar({
             <MessageCircle className="w-5 h-5" />
             <span className="hidden md:inline">Chat</span>
           </button>
+
+          {/* Share Room Button */}
+          {onShareRoom && (
+            <button
+              type="button"
+              onClick={onShareRoom}
+              aria-label="Share room invite link"
+              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-yellow-400 border border-zinc-700 hover:border-yellow-400/50 transition"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Accessibility Center Shortcut */}
           <button

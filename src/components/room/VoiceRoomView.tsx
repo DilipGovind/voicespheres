@@ -15,6 +15,7 @@ import { LiveCaptionsDisplay } from './LiveCaptionsDisplay';
 import { TextChatSidebar } from './TextChatSidebar';
 import { AacToolbarModal } from './AacToolbarModal';
 import { ReportAbuseModal } from './ReportAbuseModal';
+import { ShareRoomModal } from './ShareRoomModal';
 import { EmergencyExitButton } from '@/components/layout/EmergencyExitButton';
 import { MANDATORY_AAC_PHRASES } from '@/types/aac';
 import {
@@ -25,6 +26,7 @@ import {
   MessageSquare,
   Sparkles,
   Info,
+  Share2,
 } from 'lucide-react';
 
 interface VoiceRoomViewProps {
@@ -63,6 +65,7 @@ export function VoiceRoomView({
   const [chatOpen, setChatOpen] = useState(false);
   const [aacOpen, setAacOpen] = useState(settings.aacEnabled || settings.dockAacToolbar);
   const [reportOpen, setReportOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // References
   const captionEngineRef = useRef<CaptionEngine | null>(null);
@@ -329,6 +332,15 @@ export function VoiceRoomView({
 
           {/* Quick Actions & Emergency Exit */}
           <div className="flex items-center space-x-2.5 rtl:space-x-reverse self-start md:self-auto">
+            <button
+              type="button"
+              onClick={() => setShareOpen(true)}
+              aria-label="Share room invite link with others"
+              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-yellow-300 font-bold text-xs transition"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share Room</span>
+            </button>
             <EmergencyExitButton onExit={onLeaveRoom} roomName={room.name} />
           </div>
         </div>
@@ -411,7 +423,15 @@ export function VoiceRoomView({
         onToggleAAC={() => setAacOpen(true)}
         onOpenAccessibility={onOpenAccessibility}
         onOpenReport={() => setReportOpen(true)}
+        onShareRoom={() => setShareOpen(true)}
         onLeaveRoom={onLeaveRoom}
+      />
+
+      {/* Share Room Modal */}
+      <ShareRoomModal
+        room={room}
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
       />
 
       {/* Text Chat Sidebar */}
