@@ -15,6 +15,7 @@ import { RoomLobbyPreview } from '@/components/room/RoomLobbyPreview';
 import { VoiceRoomView } from '@/components/room/VoiceRoomView';
 import { UserProfileModal } from '@/components/profile/UserProfileModal';
 import { ShareRoomModal } from '@/components/room/ShareRoomModal';
+import { deserializeRoomFromUrl } from '@/lib/room-serializer';
 import {
   Radio,
   Sliders,
@@ -76,17 +77,23 @@ export default function Home() {
         setRooms(allCombinedRooms);
       }
 
-      // Check if URL contains direct room invite link: ?room=<roomId>
+      // Check if URL contains direct room invite link or portable serialized parameters
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const urlRoomId = params.get('room');
         if (urlRoomId) {
-          const matched = allCombinedRooms.find((r) => r.id === urlRoomId);
-          if (matched) {
-            setPreviewingRoom(matched);
-            announce(`Loaded shared room from link: ${matched.name}`, 'polite');
+          // 1. Try to deserialize directly from URL (works across ALL devices & mobile QR scans instantly!)
+          const deserialized = deserializeRoomFromUrl(params, allCombinedRooms);
+          if (deserialized) {
+            // Ensure room exists in discovery list
+            setRooms((prev) => {
+              if (prev.some((r) => r.id === deserialized.id)) return prev;
+              return [deserialized, ...prev];
+            });
+            setPreviewingRoom(deserialized);
+            announce(`Loaded shared room: ${deserialized.name}`, 'polite');
           } else {
-            // Fetch dynamically created room from server API route
+            // 2. Fetch dynamically created room from server API route
             fetch(`/api/rooms?id=${encodeURIComponent(urlRoomId)}`)
               .then((res) => res.json())
               .then((data) => {

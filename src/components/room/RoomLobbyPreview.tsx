@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
 import { Room } from '@/types/room';
 import { AudioMeter } from '@/lib/audio-meter';
+import { serializeRoomToUrl } from '@/lib/room-serializer';
 import {
   Mic,
   MicOff,
@@ -37,7 +38,7 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
 
   const handleCopyLink = async () => {
     try {
-      const url = `${window.location.origin}/?room=${encodeURIComponent(room.id)}`;
+      const url = serializeRoomToUrl(room, window.location.origin);
       await navigator.clipboard.writeText(url);
       setCopiedLink(true);
       announce('Room invite link copied to clipboard.', 'polite');

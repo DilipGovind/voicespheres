@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
 import { Room } from '@/types/room';
+import { serializeRoomToUrl } from '@/lib/room-serializer';
 import {
   Share2,
   Copy,
@@ -35,7 +36,7 @@ export function ShareRoomModal({ room, isOpen, onClose }: ShareRoomModalProps) {
 
   if (!isOpen || !room) return null;
 
-  const shareUrl = `${origin}/?room=${encodeURIComponent(room.id)}`;
+  const shareUrl = serializeRoomToUrl(room, origin);
 
   const formattedInvite = `Join our accessible voice room on VoiceSphere: "${room.name}"\n` +
     `Topic: ${room.topic}\n` +
