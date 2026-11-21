@@ -8,3 +8,7 @@ NODE_ENV = "production"
 DEMO_MODE = "false"
 ENABLE_AI_COMPANION = "false"
 DEFAULT_MAX_PARTICIPANTS = "12"
+
+[[kv_namespaces]]
+binding = "VOICESPHERE_KV"
+id = "60a7033a6c474863aa6f4d14df28cf55"
