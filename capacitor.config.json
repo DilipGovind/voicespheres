@@ -1,0 +1,21 @@
+{
+  "appId": "com.voicesphere.app",
+  "appName": "VoiceSphere",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://voicesphere.pages.dev",
+    "cleartext": false,
+    "allowNavigation": [
+      "voicesphere.pages.dev",
+      "*.livekit.cloud",
+      "*.cloudflare.com"
+    ]
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true,
+    "backgroundColor": "#080a10"
+  }
+}

@@ -19,6 +19,7 @@ import {
   Headphones,
   CheckCircle2,
   MessageSquareHeart,
+  Smartphone,
 } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -147,6 +148,19 @@ export function HeroSection({
             <MessageSquareHeart className="w-4 h-4 text-yellow-400 flex-shrink-0" />
             <span>Community Notes</span>
           </button>
+
+          {/* Android APK Download Button */}
+          <a
+            href="/voicesphere.apk"
+            download="voicesphere.apk"
+            aria-label="Download VoiceSphere Android App APK directly"
+            className="btn-glass flex items-center space-x-2 rtl:space-x-reverse h-12 px-4.5 rounded-2xl text-emerald-300 border-emerald-500/30 hover:border-emerald-500/60 font-bold text-sm whitespace-nowrap shadow-lg shadow-emerald-500/5 hover:bg-emerald-500/10"
+            title="Download Android APK (Direct Install for phones & tablets)"
+          >
+            <Smartphone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span>Download Android App</span>
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full font-mono">v1.0 APK</span>
+          </a>
         </div>
 
         {/* Live Audio Equalizer & Feature Highlights Bar */}

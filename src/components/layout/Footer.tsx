@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
-import { Radio, ShieldCheck, Heart, Github, Award } from 'lucide-react';
+import { Radio, ShieldCheck, Heart, Github, Award, Smartphone } from 'lucide-react';
 
 export function Footer() {
   const { settings } = useAccessibility();
@@ -44,6 +44,26 @@ export function Footer() {
           <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 font-mono text-[11px]">
             AGPL-3.0 Open Architecture
           </span>
+
+          <a
+            href="/voicesphere.apk"
+            download="voicesphere.apk"
+            className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold transition hover:scale-105"
+            title="Download VoiceSphere Android App APK directly"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Android APK</span>
+          </a>
+
+          <a
+            href="/voicesphere.aab"
+            download="voicesphere.aab"
+            className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold transition hover:scale-105"
+            title="Download Google Play App Bundle (AAB)"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-blue-400" />
+            <span>Google Play AAB</span>
+          </a>
         </div>
 
         <div className="text-zinc-400 text-center md:text-right max-w-xs font-normal text-[11px] leading-relaxed">

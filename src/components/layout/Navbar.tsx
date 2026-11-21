@@ -21,6 +21,7 @@ import {
   UserPlus,
   MessageSquare,
   MessageSquareHeart,
+  Smartphone,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -97,6 +98,19 @@ export function Navbar({
                 <span className="whitespace-nowrap">Community Notes</span>
               </button>
             )}
+
+            {/* Android APK Download */}
+            <a
+              href="/voicesphere.apk"
+              download="voicesphere.apk"
+              aria-label="Download VoiceSphere Android App APK"
+              className="flex items-center space-x-1.5 h-9 px-3 rounded-full border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition-all shadow-sm shadow-emerald-500/10 whitespace-nowrap flex-shrink-0 focus-visible:ring-4 focus-visible:ring-emerald-400 hover:scale-[1.02] active:scale-[0.98]"
+              title="Download Android APK (Direct Install)"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <span className="whitespace-nowrap">Android App</span>
+              <span className="text-[10px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full font-mono">APK</span>
+            </a>
 
             {/* Privacy Notice Shortcut */}
             {onOpenPrivacy && (
@@ -415,6 +429,15 @@ export function Navbar({
                 <span>Privacy Notice</span>
               </button>
             )}
+
+            <a
+              href="/voicesphere.apk"
+              download="voicesphere.apk"
+              className="flex items-center space-x-2 p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/20"
+            >
+              <Smartphone className="w-4 h-4 text-emerald-400" />
+              <span>Android App (APK)</span>
+            </a>
 
             <button
               type="button"
