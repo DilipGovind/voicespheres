@@ -13,23 +13,23 @@ import {
   Radio,
   BookOpen,
   User,
-  Coins,
   ShieldCheck,
   Menu,
   X,
   LogIn,
   LogOut,
   UserPlus,
-  Sparkles,
+  MessageSquare,
+  MessageSquareHeart,
 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenAccessibility: () => void;
   onCreateRoom: () => void;
   onOpenProfile?: () => void;
-  onOpenTrialCoins?: () => void;
+  onOpenFeedback?: () => void;
   onOpenPrivacy?: () => void;
-  onOpenAuth?: (tab?: 'login' | 'register' | 'demo') => void;
+  onOpenAuth?: (tab?: 'login' | 'register') => void;
   currentUserName?: string;
   inRoom?: boolean;
 }
@@ -38,7 +38,7 @@ export function Navbar({
   onOpenAccessibility,
   onCreateRoom,
   onOpenProfile,
-  onOpenTrialCoins,
+  onOpenFeedback,
   onOpenPrivacy,
   onOpenAuth,
   currentUserName,
@@ -83,16 +83,16 @@ export function Navbar({
         <div className="flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse flex-shrink-0">
           {/* Desktop-only secondary controls */}
           <div className="hidden md:flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse">
-            {/* Demo Trial & Coins Shortcut (Visible on xl+ screens) */}
-            {onOpenTrialCoins && (
+            {/* Community Feedback Shortcut */}
+            {onOpenFeedback && (
               <button
                 type="button"
-                onClick={onOpenTrialCoins}
-                aria-label="Open 30-Day Trial and Demo Coins"
-                className="hidden xl:flex items-center space-x-1.5 h-9 px-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs font-bold transition whitespace-nowrap flex-shrink-0 focus-visible:ring-4 focus-visible:ring-yellow-400"
+                onClick={onOpenFeedback}
+                aria-label="Share Feedback and Ideas"
+                className="flex items-center space-x-1.5 h-9 px-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs font-bold transition whitespace-nowrap flex-shrink-0 focus-visible:ring-4 focus-visible:ring-yellow-400"
               >
-                <Coins className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
-                <span className="whitespace-nowrap">30d Demo Trial</span>
+                <MessageSquareHeart className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
+                <span className="whitespace-nowrap">Feedback</span>
               </button>
             )}
 
@@ -171,8 +171,8 @@ export function Navbar({
                 >
                   <span className="text-base flex-shrink-0">{user.avatar || '👤'}</span>
                   <span className="max-w-[100px] truncate whitespace-nowrap">{user.displayName}</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 whitespace-nowrap">
-                    🪙 {user.coinsBalance}
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
+                    Free
                   </span>
                 </button>
 
@@ -185,8 +185,8 @@ export function Navbar({
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">
                           {user.role}
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/30">
-                          🪙 {user.coinsBalance} Coins
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                          Free Account
                         </span>
                       </div>
                     </div>
@@ -203,17 +203,19 @@ export function Navbar({
                         <User className="w-3.5 h-3.5 text-blue-400" />
                         <span>Edit Profile</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUserDropdownOpen(false);
-                          (onOpenAuth || openAuthModal)('demo');
-                        }}
-                        className="w-full flex items-center space-x-2 px-3 py-2 rounded-xl text-left text-zinc-200 hover:bg-zinc-800 transition"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                        <span>Switch Demo Persona</span>
-                      </button>
+                      {onOpenFeedback && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            onOpenFeedback();
+                          }}
+                          className="w-full flex items-center space-x-2 px-3 py-2 rounded-xl text-left text-zinc-200 hover:bg-zinc-800 transition"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-yellow-400" />
+                          <span>Share Feedback</span>
+                        </button>
+                      )}
                     </div>
 
                     <div className="pt-1">
@@ -312,7 +314,7 @@ export function Navbar({
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-white truncate">{user.displayName}</p>
                   <p className="text-[10px] text-zinc-400 font-mono truncate">
-                    @{user.username} • 🪙 {user.coinsBalance} Coins
+                    @{user.username} • Free Account
                   </p>
                 </div>
               </div>
@@ -350,7 +352,7 @@ export function Navbar({
                 className="flex items-center justify-center space-x-1.5 p-2.5 rounded-xl bg-yellow-400 text-black text-xs font-bold transition"
               >
                 <UserPlus className="w-4 h-4" />
-                <span>Register (+100)</span>
+                <span>Register Free</span>
               </button>
             </div>
           )}
@@ -384,17 +386,17 @@ export function Navbar({
               </button>
             )}
 
-            {onOpenTrialCoins && (
+            {onOpenFeedback && (
               <button
                 type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  onOpenTrialCoins();
+                  onOpenFeedback();
                 }}
                 className="flex items-center space-x-2 p-2.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 text-xs font-semibold hover:bg-yellow-500/20"
               >
-                <Coins className="w-4 h-4 text-yellow-400" />
-                <span>30d Demo Trial</span>
+                <MessageSquareHeart className="w-4 h-4 text-yellow-400" />
+                <span>Feedback</span>
               </button>
             )}
 

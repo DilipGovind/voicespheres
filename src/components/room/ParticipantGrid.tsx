@@ -12,7 +12,7 @@ import {
   Volume2,
   VolumeX,
   MoreVertical,
-  Coins,
+  Sparkles,
   Ban,
   UserCheck,
 } from 'lucide-react';
@@ -26,6 +26,7 @@ interface ParticipantGridProps {
   onKickUser?: (userId: string) => void;
   onTogglePersonalMute?: (userId: string) => void;
   onBlockUser?: (userId: string) => void;
+  onApplaudUser?: (recipientId: string, recipientName: string) => void;
   onTipUser?: (recipientId: string, recipientName: string) => void;
   personallyMutedUserIds?: Set<string>;
   blockedUserIds?: Set<string>;
@@ -41,6 +42,7 @@ export function ParticipantGrid({
   onKickUser,
   onTogglePersonalMute,
   onBlockUser,
+  onApplaudUser,
   onTipUser,
   personallyMutedUserIds = new Set(),
   blockedUserIds = new Set(),
@@ -83,7 +85,7 @@ export function ParticipantGrid({
               onKickUser={onKickUser}
               onTogglePersonalMute={onTogglePersonalMute}
               onBlockUser={onBlockUser}
-              onTipUser={onTipUser}
+              onApplaudUser={onApplaudUser || onTipUser}
             />
           ))}
         </div>
@@ -115,7 +117,7 @@ export function ParticipantGrid({
                 onKickUser={onKickUser}
                 onTogglePersonalMute={onTogglePersonalMute}
                 onBlockUser={onBlockUser}
-                onTipUser={onTipUser}
+                onApplaudUser={onApplaudUser || onTipUser}
               />
             ))}
           </div>
@@ -136,6 +138,7 @@ interface ParticipantCardProps {
   onKickUser?: (userId: string) => void;
   onTogglePersonalMute?: (userId: string) => void;
   onBlockUser?: (userId: string) => void;
+  onApplaudUser?: (recipientId: string, recipientName: string) => void;
   onTipUser?: (recipientId: string, recipientName: string) => void;
 }
 
@@ -150,6 +153,7 @@ function ParticipantCard({
   onKickUser,
   onTogglePersonalMute,
   onBlockUser,
+  onApplaudUser,
   onTipUser,
 }: ParticipantCardProps) {
   const { settings } = useAccessibility();
@@ -251,16 +255,16 @@ function ParticipantCard({
 
       {/* Quick Action Controls (Tip, Personal Mute & Mod Actions) */}
       <div className="flex items-center space-x-1.5 rtl:space-x-reverse mt-2">
-        {/* Tip with demo coins */}
-        {!isSelf && onTipUser && (
+        {/* Applaud speaker (100% Free reaction) */}
+        {!isSelf && (onApplaudUser || onTipUser) && (
           <button
             type="button"
-            onClick={() => onTipUser(participant.id, participant.name)}
-            aria-label={`Send 10 demo coins tip to ${participant.name}`}
+            onClick={() => (onApplaudUser || onTipUser)!(participant.id, participant.name)}
+            aria-label={`Send applause to ${participant.name}`}
             className="p-1.5 rounded-lg border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs transition"
-            title="Send Demo Tip (10 coins)"
+            title="Applaud Speaker"
           >
-            <Coins className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5" />
           </button>
         )}
 

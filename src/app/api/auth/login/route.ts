@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server';
-import { SEED_DEMO_USERS } from '@/lib/auth-store';
 import { LoginInput } from '@/types/auth';
 
 export const runtime = 'edge';
 
 const serverEdgeUsers = new Map<string, any>();
-SEED_DEMO_USERS.forEach((u) => {
-  serverEdgeUsers.set(u.username.toLowerCase(), u);
-  serverEdgeUsers.set(u.email.toLowerCase(), u);
-});
 
 export async function POST(request: Request) {
   try {
@@ -31,9 +26,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (found.passwordHash && found.passwordHash !== body.password && body.password !== 'pass123') {
+    if (found.passwordHash && found.passwordHash !== body.password) {
       return NextResponse.json(
-        { error: 'Incorrect password. Try pass123 or select a Demo persona.' },
+        { error: 'Incorrect password. Please verify your credentials.' },
         { status: 401 }
       );
     }

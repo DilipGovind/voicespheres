@@ -10,31 +10,28 @@ import {
   Mail,
   Eye,
   EyeOff,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   X,
   LogIn,
   UserPlus,
-  Coins,
   ShieldCheck,
   ChevronRight,
   Sliders,
-  SlidersHorizontal,
+  Sparkles,
 } from 'lucide-react';
-import { SEED_DEMO_USERS } from '@/lib/auth-store';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'login' | 'register' | 'demo';
+  initialTab?: 'login' | 'register';
 }
 
 export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
-  const { login, register, demoLogin, registeredUsers } = useAuth();
+  const { login, register } = useAuth();
   const { announce } = useAccessibility();
 
-  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -55,7 +52,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
   const [regIsAac, setRegIsAac] = useState(false);
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    setActiveTab(initialTab === 'register' ? 'register' : 'login');
     setErrorMessage('');
     setSuccessMessage('');
   }, [initialTab, isOpen]);
@@ -116,10 +113,10 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
       });
 
       if (res.success) {
-        setSuccessMessage('Welcome! Your account is created with 100 free bonus coins.');
+        setSuccessMessage('Welcome! Your free account is created successfully.');
         setTimeout(() => {
           onClose();
-        }, 900);
+        }, 800);
       } else {
         setErrorMessage(res.error || 'Could not complete registration.');
       }
@@ -128,14 +125,6 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleSelectDemoUser = (user: typeof SEED_DEMO_USERS[0]) => {
-    demoLogin(user);
-    setSuccessMessage(`Logged in as demo persona: ${user.displayName}`);
-    setTimeout(() => {
-      onClose();
-    }, 600);
   };
 
   return (
@@ -154,24 +143,16 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
-                VoiceSphere ID
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30 text-xs font-bold flex items-center space-x-1">
-                <Coins className="w-3 h-3" />
-                <span>+100 Coins On Sign-Up</span>
-              </span>
-            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
+              100% Free Account
+            </span>
             <h2 id="auth-modal-title" className="text-2xl font-black text-white pt-1">
-              {activeTab === 'login' && 'Sign In to VoiceSphere'}
-              {activeTab === 'register' && 'Join the Inclusive Community'}
-              {activeTab === 'demo' && 'Quick Instant Demo Logins'}
+              {activeTab === 'login' ? 'Sign In to VoiceSphere' : 'Join VoiceSphere Free'}
             </h2>
             <p className="text-xs sm:text-sm text-zinc-400">
-              {activeTab === 'login' && 'Access your personalized accessibility presets, saved AAC phrases & rooms.'}
-              {activeTab === 'register' && 'Pseudonymous or real name: zero invasive tracking, 100% accessible.'}
-              {activeTab === 'demo' && 'Experience the platform through pre-configured diverse accessibility personas.'}
+              {activeTab === 'login'
+                ? 'Access your voice rooms, saved AAC phrases, and accessibility preferences.'
+                : 'Real name or pseudonym: 100% free forever, zero ads, zero tracking.'}
             </p>
           </div>
 
@@ -216,23 +197,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
             }`}
           >
             <UserPlus className="w-4 h-4" />
-            <span>Register</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('demo');
-              setErrorMessage('');
-            }}
-            className={`flex-1 py-2 sm:py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 ${
-              activeTab === 'demo'
-                ? 'bg-zinc-700 text-white shadow-md'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-yellow-300" />
-            <span>Demo Logins</span>
+            <span>Register Free</span>
           </button>
         </div>
 
@@ -271,7 +236,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
                   required
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
-                  placeholder="e.g. elena_a11y or elena@voicesphere.org"
+                  placeholder="Enter your username or email"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-sm text-white focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition"
                 />
               </div>
@@ -288,7 +253,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
                   required
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Enter your password (e.g. pass123)"
+                  placeholder="Enter your password"
                   className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-sm text-white focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition"
                 />
                 <button
@@ -307,19 +272,12 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
                 <input type="checkbox" defaultChecked className="w-4 h-4 rounded accent-blue-500" />
                 <span>Remember me on this browser</span>
               </label>
-              <button
-                type="button"
-                onClick={() => setActiveTab('demo')}
-                className="text-blue-400 hover:underline font-semibold"
-              >
-                Use 1-Click Demo Account
-              </button>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition flex items-center justify-center space-x-2"
+              className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-sm shadow-md transition flex items-center justify-center space-x-2"
             >
               <span>{isSubmitting ? 'Signing In...' : 'Sign In'}</span>
               <ChevronRight className="w-4 h-4" />
@@ -338,7 +296,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
           </form>
         )}
 
-        {/* Tab 2: Register */}
+        {/* Tab 2: Register Free */}
         {activeTab === 'register' && (
           <form onSubmit={handleRegisterSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -419,7 +377,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
             <div className="space-y-1.5 p-3 rounded-2xl bg-zinc-900 border border-zinc-800">
               <label className="block text-xs font-bold text-yellow-300 uppercase tracking-wider flex items-center space-x-1.5">
                 <Sliders className="w-3.5 h-3.5" />
-                <span>Primary Accessibility Preference (Optional)</span>
+                <span>Primary Accessibility Preset (Optional)</span>
               </label>
               <select
                 value={regPreset}
@@ -449,61 +407,12 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-2xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black font-extrabold text-sm shadow-xl shadow-yellow-400/20 transition flex items-center justify-center space-x-2"
+              className="w-full py-3 rounded-2xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black font-extrabold text-sm shadow-md transition flex items-center justify-center space-x-2"
             >
-              <span>{isSubmitting ? 'Creating Account...' : 'Complete Registration (+100 Coins)'}</span>
-              <Coins className="w-4 h-4" />
+              <span>{isSubmitting ? 'Creating Free Account...' : 'Complete Free Registration'}</span>
+              <ChevronRight className="w-4 h-4" />
             </button>
           </form>
-        )}
-
-        {/* Tab 3: Demo Logins */}
-        {activeTab === 'demo' && (
-          <div className="space-y-3">
-            <p className="text-xs text-zinc-400">
-              Select any pre-configured community member persona to immediately explore their setup:
-            </p>
-
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {SEED_DEMO_USERS.map((demo) => (
-                <button
-                  key={demo.id}
-                  type="button"
-                  onClick={() => handleSelectDemoUser(demo)}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800/90 text-left transition group focus:ring-2 focus:ring-yellow-400"
-                >
-                  <div className="flex items-center space-x-3 min-w-0">
-                    <span className="text-2xl p-2 rounded-xl bg-zinc-800 flex-shrink-0">
-                      {demo.avatar}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex items-center space-x-2 flex-wrap">
-                        <span className="font-bold text-sm text-white group-hover:text-yellow-300 transition">
-                          {demo.displayName}
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
-                          @{demo.username}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                          {demo.role}
-                        </span>
-                      </div>
-                      <p className="text-xs text-zinc-400 truncate mt-0.5 max-w-xs sm:max-w-sm">
-                        {demo.bio}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 flex-shrink-0 pl-2">
-                    <span className="text-xs font-bold text-yellow-400 opacity-0 group-hover:opacity-100 transition hidden sm:inline">
-                      Login &rarr;
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-yellow-400 transition" />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
         )}
 
         {/* Privacy Pledge */}

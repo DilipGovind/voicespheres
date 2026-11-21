@@ -16,7 +16,7 @@ import {
   Share2,
   ShieldCheck,
   Bot,
-  Coins,
+  MessageSquareHeart,
 } from 'lucide-react';
 
 interface ControlsBarProps {
@@ -37,7 +37,7 @@ interface ControlsBarProps {
   onOpenReport: () => void;
   onOpenHostControls?: () => void;
   onToggleAiCompanion?: () => void;
-  onOpenCoins?: () => void;
+  onOpenFeedback?: () => void;
   onShareRoom?: () => void;
   onLeaveRoom: () => void;
 }
@@ -60,7 +60,7 @@ export function ControlsBar({
   onOpenReport,
   onOpenHostControls,
   onToggleAiCompanion,
-  onOpenCoins,
+  onOpenFeedback,
   onShareRoom,
   onLeaveRoom,
 }: ControlsBarProps) {
@@ -183,16 +183,16 @@ export function ControlsBar({
             </button>
           )}
 
-          {/* Demo Trial & Coins Button */}
-          {onOpenCoins && (
+          {/* Community Feedback Button */}
+          {onOpenFeedback && (
             <button
               type="button"
-              onClick={onOpenCoins}
-              aria-label="View 30-Day Trial & Demo Coins Balance"
-              title="Demo Trial & Coins (No Real Payments)"
+              onClick={onOpenFeedback}
+              aria-label="Share Community Feedback"
+              title="Share Feedback & Ideas"
               className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-yellow-400 border border-zinc-700 hover:border-yellow-400/50 transition"
             >
-              <Coins className="w-5 h-5" />
+              <MessageSquareHeart className="w-5 h-5" />
             </button>
           )}
 

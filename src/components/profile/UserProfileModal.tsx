@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
 import { useAuth } from '@/lib/auth-context';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
-import { User, Shield, Download, Trash2, X, Check, Lock, Coins, Sparkles, LogIn } from 'lucide-react';
+import { User, Shield, Download, Trash2, X, Check, Lock, Sparkles, LogIn } from 'lucide-react';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -138,7 +138,7 @@ export function UserProfileModal({
                 )}
               </div>
               <p className="text-xs text-zinc-400">
-                {user ? `@${user.username} • 🪙 ${user.coinsBalance} Coins` : 'Zero tracking, privacy-first local identity'}
+                {user ? `@${user.username} • Free Member` : 'Zero tracking, privacy-first local identity'}
               </p>
             </div>
           </div>
@@ -156,7 +156,7 @@ export function UserProfileModal({
           <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between gap-3">
             <div className="space-y-0.5">
               <p className="text-xs font-bold text-blue-300">Currently Browsing as Guest</p>
-              <p className="text-[11px] text-zinc-400">Sign in or register to sync your rooms, AAC phrases, and coins across devices.</p>
+              <p className="text-[11px] text-zinc-400">Sign in or register free to save your identity, accessibility presets, and community feedback.</p>
             </div>
             <button
               type="button"

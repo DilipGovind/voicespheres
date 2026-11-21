@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserAccount, RegisterInput, LoginInput } from '@/types/auth';
 import {
-  SEED_DEMO_USERS,
   getRegisteredUsers,
   registerNewUser,
   authenticateUser,
@@ -20,23 +19,22 @@ interface AuthContextType {
   isGuest: boolean;
   login: (input: LoginInput) => Promise<{ success: boolean; error?: string }>;
   register: (input: RegisterInput) => Promise<{ success: boolean; error?: string }>;
-  demoLogin: (userOrId: UserAccount | string) => void;
   logout: () => void;
   updateProfile: (updates: Partial<UserAccount>) => void;
   registeredUsers: UserAccount[];
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
-  authModalInitialTab: 'login' | 'register' | 'demo';
-  openAuthModal: (tab?: 'login' | 'register' | 'demo') => void;
+  authModalInitialTab: 'login' | 'register';
+  openAuthModal: (tab?: 'login' | 'register') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserAccount | null>(null);
-  const [registeredUsers, setRegisteredUsers] = useState<UserAccount[]>(SEED_DEMO_USERS);
+  const [registeredUsers, setRegisteredUsers] = useState<UserAccount[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalInitialTab, setAuthModalInitialTab] = useState<'login' | 'register' | 'demo'>('login');
+  const [authModalInitialTab, setAuthModalInitialTab] = useState<'login' | 'register'>('login');
 
   const { applyPreset, announce } = useAccessibility();
   const { setLocale } = useI18n();
@@ -51,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (activeSession) {
         setUser(activeSession);
       } else {
-        // Create an anonymous guest user if no session exists yet
+        // Create an anonymous guest identifier if no session exists yet
         const guestId = localStorage.getItem('voicesphere_user_id') || 'guest_' + Math.random().toString(36).substring(2, 8);
         const guestName = localStorage.getItem('voicesphere_username') || 'GuestListener';
         localStorage.setItem('voicesphere_user_id', guestId);
@@ -62,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const openAuthModal = useCallback((tab: 'login' | 'register' | 'demo' = 'login') => {
+  const openAuthModal = useCallback((tab: 'login' | 'register' = 'login') => {
     setAuthModalInitialTab(tab);
     setIsAuthModalOpen(true);
   }, []);
@@ -75,7 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(localResult.user);
         saveCurrentSession(localResult.user);
 
-        // Apply user's preferred preset and language if set
         if (localResult.user.preferredPreset) {
           applyPreset(localResult.user.preferredPreset as any);
         }
@@ -88,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: true };
       }
 
-      // Fallback or attempt server API call
+      // Fallback to API route
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -135,36 +132,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLocale(localResult.user.preferredLanguage as SupportedLocale);
       }
 
-      announce(`Welcome to VoiceSphere, ${localResult.user.displayName}! Account created with 100 free bonus coins.`, 'polite');
+      announce(`Welcome to VoiceSphere, ${localResult.user.displayName}! Your free account is active.`, 'polite');
       return { success: true };
     },
     [applyPreset, setLocale, announce]
-  );
-
-  const demoLogin = useCallback(
-    (userOrId: UserAccount | string) => {
-      let targetUser: UserAccount | undefined;
-      if (typeof userOrId === 'string') {
-        targetUser = registeredUsers.find((u) => u.id === userOrId || u.username === userOrId);
-      } else {
-        targetUser = userOrId;
-      }
-
-      if (targetUser) {
-        setUser(targetUser);
-        saveCurrentSession(targetUser);
-
-        if (targetUser.preferredPreset) {
-          applyPreset(targetUser.preferredPreset as any);
-        }
-        if (targetUser.preferredLanguage) {
-          setLocale(targetUser.preferredLanguage as SupportedLocale);
-        }
-
-        announce(`Logged in as demo persona: ${targetUser.displayName} (${targetUser.role})`, 'polite');
-      }
-    },
-    [registeredUsers, applyPreset, setLocale, announce]
   );
 
   const logout = useCallback(() => {
@@ -201,7 +172,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isGuest: !user,
         login,
         register,
-        demoLogin,
         logout,
         updateProfile,
         registeredUsers,

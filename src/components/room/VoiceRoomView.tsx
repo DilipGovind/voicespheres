@@ -12,8 +12,6 @@ import { AACSpeechEngine } from '@/lib/aac-speech-engine';
 import { IVoiceAdapter, VoiceConnectionState } from '@/lib/voice/voice-adapter.interface';
 import { getVoiceAdapter } from '@/lib/voice/adapter-factory';
 import { AICompanionService, AI_COMPANION_PARTICIPANT } from '@/lib/ai-companion';
-import { mockPaymentGateway } from '@/lib/payments/mock-payment-gateway';
-
 // Components
 import { VoiceConnectionBanner } from './VoiceConnectionBanner';
 import { StageStructuredBar } from './StageStructuredBar';
@@ -25,7 +23,7 @@ import { AacToolbarModal } from './AacToolbarModal';
 import { ReportAbuseModal } from './ReportAbuseModal';
 import { ShareRoomModal } from './ShareRoomModal';
 import { HostControlsModal } from './HostControlsModal';
-import { TrialAndCoinsModal } from '@/components/payments/TrialAndCoinsModal';
+import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { EmergencyExitButton } from '@/components/layout/EmergencyExitButton';
 import { MANDATORY_AAC_PHRASES } from '@/types/aac';
 import {
@@ -38,7 +36,6 @@ import {
   Info,
   Share2,
   ShieldCheck,
-  Coins,
   Bot,
 } from 'lucide-react';
 
@@ -95,8 +92,8 @@ export function VoiceRoomView({
   const [reportOpen, setReportOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [hostControlsOpen, setHostControlsOpen] = useState(false);
-  const [trialCoinsOpen, setTrialCoinsOpen] = useState(false);
-  const [tippingFeedback, setTippingFeedback] = useState<string | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [roomFeedback, setRoomFeedback] = useState<string | null>(null);
 
   // References
   const captionEngineRef = useRef<CaptionEngine | null>(null);
@@ -448,31 +445,6 @@ export function VoiceRoomView({
   };
 
   // Demo Peer Speech Simulation
-  const handleSimulatePeerSpeech = () => {
-    const peers = participants.filter((p) => p.id !== currentUserId && p.role !== 'listener');
-    const speaker = peers.length > 0 ? peers[0] : { id: 'user_maya', name: 'Maya (Host)', avatar: 'MY' };
-
-    const demoPhrases = [
-      'Welcome everyone to VoiceSphere! Live speech captions and LiveKit WebRTC audio are active.',
-      'Thank you for joining our accessible voice session across networks.',
-      'I agree with this point. Let us continue with structured queue speaking.',
-      'Testing audio packets and latency from remote connection.',
-    ];
-    const phrase = demoPhrases[Math.floor(Math.random() * demoPhrases.length)];
-
-    const demoCaption: LiveCaptionItem = {
-      id: Math.random().toString(36).substring(2, 9),
-      speakerId: speaker.id,
-      speakerName: speaker.name,
-      text: phrase,
-      timestamp: Date.now(),
-      isAac: true,
-      language: room.language,
-    };
-
-    realtimeClient.sendCaption(demoCaption);
-  };
-
   // Moderator actions with server validation
   const handleMuteUser = async (targetUserId: string) => {
     try {
@@ -600,18 +572,11 @@ export function VoiceRoomView({
     announce('Participant blocked. Audio muted and messages hidden.', 'assertive');
   };
 
-  // Send Demo Tip to Speaker
-  const handleTipSpeaker = async (recipientId: string, recipientName: string) => {
-    try {
-      const tipAmount = 10;
-      await mockPaymentGateway.sendTip(currentUserId, recipientId, recipientName, tipAmount);
-      setTippingFeedback(`Sent +${tipAmount} Demo Coins tip to ${recipientName}!`);
-      announce(`Sent demo tip of ${tipAmount} coins to ${recipientName}`, 'polite');
-      setTimeout(() => setTippingFeedback(null), 4000);
-    } catch (err: any) {
-      setTippingFeedback(err.message || 'Could not send tip');
-      setTimeout(() => setTippingFeedback(null), 4000);
-    }
+  // Send Free Applause to Speaker
+  const handleApplaudSpeaker = (recipientId: string, recipientName: string) => {
+    setRoomFeedback(`👏 Sent applause to ${recipientName}!`);
+    announce(`Sent applause to ${recipientName}`, 'polite');
+    setTimeout(() => setRoomFeedback(null), 3000);
   };
 
   // Toggle Optional AI Voice Companion
@@ -688,14 +653,15 @@ export function VoiceRoomView({
                 </span>
               )}
 
-              {/* Demo Mode Badge */}
+              {/* Feedback Button */}
               <button
                 type="button"
-                onClick={() => setTrialCoinsOpen(true)}
+                onClick={() => setFeedbackOpen(true)}
+                aria-label="Share Community Feedback"
                 className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-300 text-xs border border-yellow-400/40 transition font-bold"
               >
-                <Coins className="w-3 h-3" />
-                <span>Demo Trial & Coins</span>
+                <MessageSquare className="w-3 h-3" />
+                <span>Give Feedback</span>
               </button>
             </div>
 
@@ -720,16 +686,6 @@ export function VoiceRoomView({
 
             <button
               type="button"
-              onClick={handleSimulatePeerSpeech}
-              aria-label="Simulate peer speaking to test audio ripples, speech synthesis, and live captions"
-              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold text-xs transition"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Simulate Peer Voice</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setShareOpen(true)}
               aria-label="Share room invite link with others"
               className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-yellow-300 font-bold text-xs transition"
@@ -745,17 +701,14 @@ export function VoiceRoomView({
 
       {/* Main Room Body */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
-        {/* Tipping / Toast Notification */}
-        {tippingFeedback && (
+        {/* Room Notification / Toast */}
+        {roomFeedback && (
           <div
             role="status"
             aria-live="polite"
             className="p-3 rounded-2xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-200 text-xs font-bold flex items-center justify-between"
           >
-            <span>{tippingFeedback}</span>
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-yellow-400/20 text-yellow-300">
-              DEMO TRANSACTION
-            </span>
+            <span>{roomFeedback}</span>
           </div>
         )}
 
@@ -782,7 +735,7 @@ export function VoiceRoomView({
           onKickUser={handleKickUser}
           onTogglePersonalMute={handleTogglePersonalMute}
           onBlockUser={handleBlockUser}
-          onTipUser={handleTipSpeaker}
+          onApplaudUser={handleApplaudSpeaker}
           personallyMutedUserIds={personallyMutedUserIds}
           blockedUserIds={blockedUserIds}
           activeSpeakerId={activeSpeakerId}
@@ -841,7 +794,7 @@ export function VoiceRoomView({
         onOpenReport={() => setReportOpen(true)}
         onOpenHostControls={() => setHostControlsOpen(true)}
         onToggleAiCompanion={handleToggleAiCompanion}
-        onOpenCoins={() => setTrialCoinsOpen(true)}
+        onOpenFeedback={() => setFeedbackOpen(true)}
         onShareRoom={() => setShareOpen(true)}
         onLeaveRoom={onLeaveRoom}
       />
@@ -861,12 +814,10 @@ export function VoiceRoomView({
         onEndRoom={handleEndRoom}
       />
 
-      {/* Demo 30-Day Trial and Coins Modal */}
-      <TrialAndCoinsModal
-        isOpen={trialCoinsOpen}
-        onClose={() => setTrialCoinsOpen(false)}
-        userId={currentUserId}
-        userName={currentUserName}
+      {/* Community Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
       />
 
       {/* Share Room Modal */}

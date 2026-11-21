@@ -16,11 +16,11 @@ import { RoomLobbyPreview } from '@/components/room/RoomLobbyPreview';
 import { VoiceRoomView } from '@/components/room/VoiceRoomView';
 import { UserProfileModal } from '@/components/profile/UserProfileModal';
 import { ShareRoomModal } from '@/components/room/ShareRoomModal';
-import { TrialAndCoinsModal } from '@/components/payments/TrialAndCoinsModal';
 import { PrivacyNoticeModal } from '@/components/safety/PrivacyNoticeModal';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { HeroSection } from '@/components/home/HeroSection';
-import { PersonaShowcase } from '@/components/home/PersonaShowcase';
+import { CommunityFeedbackSection } from '@/components/feedback/CommunityFeedbackSection';
 import { PlatformFeatures } from '@/components/home/PlatformFeatures';
 import { HowItWorks } from '@/components/home/HowItWorks';
 import { deserializeRoomFromUrl } from '@/lib/room-serializer';
@@ -38,7 +38,6 @@ import {
   Ear,
   Eye,
   User,
-  Coins,
   ShieldCheck,
 } from 'lucide-react';
 
@@ -96,7 +95,7 @@ export default function Home() {
   const [isA11yCenterOpen, setIsA11yCenterOpen] = useState(false);
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isTrialCoinsOpen, setIsTrialCoinsOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [shareModalRoom, setShareModalRoom] = useState<Room | null>(null);
 
@@ -264,7 +263,7 @@ export default function Home() {
           onOpenAccessibility={() => setIsA11yCenterOpen(true)}
           onCreateRoom={() => setIsCreateRoomOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
-          onOpenTrialCoins={() => setIsTrialCoinsOpen(true)}
+          onOpenFeedback={() => setIsFeedbackOpen(true)}
           onOpenPrivacy={() => setIsPrivacyOpen(true)}
           onOpenAuth={(tab) => openAuthModal(tab)}
           currentUserName={currentUserName}
@@ -285,11 +284,9 @@ export default function Home() {
           onClose={() => setIsA11yCenterOpen(false)}
         />
 
-        <TrialAndCoinsModal
-          isOpen={isTrialCoinsOpen}
-          onClose={() => setIsTrialCoinsOpen(false)}
-          userId={currentUserId}
-          userName={currentUserName}
+        <FeedbackModal
+          isOpen={isFeedbackOpen}
+          onClose={() => setIsFeedbackOpen(false)}
         />
 
         <PrivacyNoticeModal
@@ -313,7 +310,7 @@ export default function Home() {
         onOpenAccessibility={() => setIsA11yCenterOpen(true)}
         onCreateRoom={() => setIsCreateRoomOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
-        onOpenTrialCoins={() => setIsTrialCoinsOpen(true)}
+        onOpenFeedback={() => setIsFeedbackOpen(true)}
         onOpenPrivacy={() => setIsPrivacyOpen(true)}
         onOpenAuth={(tab) => openAuthModal(tab)}
         currentUserName={currentUserName}
@@ -326,11 +323,12 @@ export default function Home() {
           onOpenAccessibility={() => setIsA11yCenterOpen(true)}
           onCreateRoom={() => setIsCreateRoomOpen(true)}
           onOpenPrivacy={() => setIsPrivacyOpen(true)}
+          onOpenFeedback={() => setIsFeedbackOpen(true)}
           totalActiveRooms={rooms.length}
         />
 
-        {/* 2. Diverse Community Personas Showcase */}
-        <PersonaShowcase />
+        {/* 2. Community Thoughts & Feedback Wall */}
+        <CommunityFeedbackSection onOpenFeedback={() => setIsFeedbackOpen(true)} />
 
         {/* 3. Core Architectural Pillars */}
         <PlatformFeatures />
@@ -393,11 +391,17 @@ export default function Home() {
 
       <Footer />
 
-      {/* VoiceSphere Authentication Modal (Sign In, Register, Demo Personas) */}
+      {/* VoiceSphere Authentication Modal (Sign In, Free Registration) */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         initialTab={authModalInitialTab}
+      />
+
+      {/* Community Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
       />
 
       {/* Share Room Modal */}
@@ -437,14 +441,6 @@ export default function Home() {
         onClose={() => setIsProfileOpen(false)}
         currentName={currentUserName}
         onUpdateName={(newName) => setCurrentUserName(newName)}
-      />
-
-      {/* Demo 30-Day Trial & Coins Modal */}
-      <TrialAndCoinsModal
-        isOpen={isTrialCoinsOpen}
-        onClose={() => setIsTrialCoinsOpen(false)}
-        userId={currentUserId}
-        userName={currentUserName}
       />
 
       {/* Privacy Notice Modal */}

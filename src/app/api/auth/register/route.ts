@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
-import { SEED_DEMO_USERS, registerNewUser } from '@/lib/auth-store';
 import { RegisterInput } from '@/types/auth';
 
 export const runtime = 'edge';
 
 // Edge-safe in-memory registry for serverless instances
 const serverEdgeUsers = new Map<string, any>();
-SEED_DEMO_USERS.forEach((u) => {
-  serverEdgeUsers.set(u.username.toLowerCase(), u);
-  serverEdgeUsers.set(u.email.toLowerCase(), u);
-});
 
 export async function POST(request: Request) {
   try {
@@ -32,7 +27,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const avatars = ['🌟', '🦉', '🎨', '🚀', '🌈', '🌻', '💡', '🎵', '⚡', '🌊'];
+    const avatars = ['🌟', '🦉', '🎨', '🚀', '🌈', '🌻', '💡', '🎵', '⚡', '🌊', '🎙️', '✨'];
     const assignedAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
     const newUser = {
@@ -43,12 +38,12 @@ export async function POST(request: Request) {
       avatar: assignedAvatar,
       role: 'member' as const,
       pronouns: body.pronouns?.trim() || undefined,
-      bio: body.bio?.trim() || 'New VoiceSphere community member.',
+      bio: body.bio?.trim() || 'VoiceSphere community member.',
       preferredLanguage: body.preferredLanguage || 'en',
       preferredPreset: body.preferredPreset || 'DEFAULT',
       isAacUser: Boolean(body.isAacUser),
       coinsBalance: 100,
-      trialDaysLeft: 30,
+      trialDaysLeft: 365,
       createdAt: Date.now(),
       lastLoginAt: Date.now(),
     };

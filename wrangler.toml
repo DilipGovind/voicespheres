@@ -5,6 +5,6 @@ pages_build_output_dir = ".vercel/output/static"
 
 [vars]
 NODE_ENV = "production"
-DEMO_MODE = "true"
+DEMO_MODE = "false"
 ENABLE_AI_COMPANION = "false"
 DEFAULT_MAX_PARTICIPANTS = "12"

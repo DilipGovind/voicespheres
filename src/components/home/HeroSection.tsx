@@ -10,7 +10,6 @@ import {
   Sliders,
   UserPlus,
   LogIn,
-  Coins,
   ShieldCheck,
   Volume2,
   Subtitles,
@@ -19,12 +18,14 @@ import {
   ArrowRight,
   Headphones,
   CheckCircle2,
+  MessageSquareHeart,
 } from 'lucide-react';
 
 interface HeroSectionProps {
   onOpenAccessibility: () => void;
   onCreateRoom: () => void;
   onOpenPrivacy: () => void;
+  onOpenFeedback: () => void;
   totalActiveRooms: number;
 }
 
@@ -32,6 +33,7 @@ export function HeroSection({
   onOpenAccessibility,
   onCreateRoom,
   onOpenPrivacy,
+  onOpenFeedback,
   totalActiveRooms,
 }: HeroSectionProps) {
   const { settings } = useAccessibility();
@@ -122,18 +124,18 @@ export function HeroSection({
               className="flex items-center space-x-2 rtl:space-x-reverse h-11 px-5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-md shadow-yellow-500/20 whitespace-nowrap transition transform hover:-translate-y-0.5"
             >
               <UserPlus className="w-4 h-4 flex-shrink-0" />
-              <span>Create Free Account (+100 Coins)</span>
+              <span>Register Free</span>
             </button>
           )}
 
-          {/* 1-Click Demo Logins */}
+          {/* Community Feedback Button */}
           <button
             type="button"
-            onClick={() => openAuthModal('demo')}
+            onClick={onOpenFeedback}
             className="flex items-center space-x-2 rtl:space-x-reverse h-11 px-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-bold text-sm whitespace-nowrap transition"
           >
-            <Sparkles className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-            <span>1-Click Demo Personas</span>
+            <MessageSquareHeart className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+            <span>Community Feedback</span>
           </button>
 
           {/* Accessibility Presets */}

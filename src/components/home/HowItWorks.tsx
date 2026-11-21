@@ -18,9 +18,9 @@ export function HowItWorks({ onOpenAccessibility }: { onOpenAccessibility: () =>
     },
     {
       num: '02',
-      title: 'Sign In or Join as Guest',
-      desc: 'Register in seconds to unlock +100 bonus coins & custom phrase books, or explore instantly with pseudonymous identity.',
-      actionText: 'Register / Login',
+      title: 'Register Completely Free',
+      desc: 'Create your account in seconds with zero fees, zero ads, and zero tracking. Or explore immediately as an anonymous guest.',
+      actionText: 'Register Free',
       onClick: () => openAuthModal('register'),
       color: 'from-yellow-500/20 to-amber-500/10 border-yellow-500/30 text-yellow-300',
     },
