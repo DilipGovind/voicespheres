@@ -131,8 +131,38 @@ if (!g.__voicesphere_users_map) {
 
 export const serverUsersMap: Map<string, ServerUserRecord> = g.__voicesphere_users_map;
 
-function persistUsersToDisk() {
+// Cloudflare KV Store Helper
+async function getCloudflareKv(): Promise<any | null> {
   try {
+    const envKv = (process.env as any)?.VOICESPHERE_KV || (globalThis as any)?.VOICESPHERE_KV;
+    if (envKv && typeof envKv.get === 'function') return envKv;
+  } catch {}
+  return null;
+}
+
+async function persistUsersToDisk() {
+  try {
+    const seen = new Set<string>();
+    const customUsers: ServerUserRecord[] = [];
+    const initialIds = new Set(INITIAL_COMMUNITY_USERS.map((u) => u.id));
+
+    serverUsersMap.forEach((user) => {
+      if (!seen.has(user.id)) {
+        seen.add(user.id);
+        if (!initialIds.has(user.id)) {
+          customUsers.push(user);
+        }
+      }
+    });
+    const jsonStr = JSON.stringify(customUsers, null, 2);
+
+    // 1. Cloudflare KV binding if configured
+    const kv = await getCloudflareKv();
+    if (kv) {
+      await kv.put('community_users', jsonStr).catch(() => {});
+    }
+
+    // 2. Node.js filesystem persistence
     const fs = getRuntimeNodeModule('fs');
     const path = getRuntimeNodeModule('path');
     if (fs && path) {
@@ -141,19 +171,7 @@ function persistUsersToDisk() {
         fs.mkdirSync(dataDir, { recursive: true });
       }
       const usersFile = path.join(dataDir, 'community_users.json');
-      const seen = new Set<string>();
-      const customUsers: ServerUserRecord[] = [];
-      const initialIds = new Set(INITIAL_COMMUNITY_USERS.map((u) => u.id));
-
-      serverUsersMap.forEach((user) => {
-        if (!seen.has(user.id)) {
-          seen.add(user.id);
-          if (!initialIds.has(user.id)) {
-            customUsers.push(user);
-          }
-        }
-      });
-      fs.writeFileSync(usersFile, JSON.stringify(customUsers, null, 2), 'utf8');
+      fs.writeFileSync(usersFile, jsonStr, 'utf8');
     }
   } catch {
     // Edge/serverless fallback

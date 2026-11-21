@@ -61,9 +61,29 @@ if (!g.__voicesphere_sync_map) {
 export const serverRoomsMap: Map<string, Room> = g.__voicesphere_rooms_map;
 export const roomsSyncMap: Map<string, RoomSyncState> = g.__voicesphere_sync_map;
 
-// Save custom rooms to disk in Node.js
-function persistCustomRoomsToDisk() {
+// Cloudflare KV Store Helper (for multi-datacenter edge persistence on Cloudflare Pages)
+export async function getCloudflareKv(): Promise<any | null> {
   try {
+    const envKv = (process.env as any)?.VOICESPHERE_KV || (globalThis as any)?.VOICESPHERE_KV;
+    if (envKv && typeof envKv.get === 'function') return envKv;
+  } catch {}
+  return null;
+}
+
+// Save custom rooms to disk in Node.js or Cloudflare KV
+export async function persistCustomRoomsToDisk() {
+  try {
+    const initialIds = new Set(INITIAL_COMMUNITY_ROOMS.map((r) => r.id));
+    const customRooms = Array.from(serverRoomsMap.values()).filter((r) => !initialIds.has(r.id));
+    const jsonStr = JSON.stringify(customRooms, null, 2);
+
+    // 1. Cloudflare KV binding if present
+    const kv = await getCloudflareKv();
+    if (kv) {
+      await kv.put('community_rooms', jsonStr).catch(() => {});
+    }
+
+    // 2. Node.js filesystem persistence
     const fs = getRuntimeNodeModule('fs');
     const path = getRuntimeNodeModule('path');
     if (fs && path) {
@@ -72,9 +92,7 @@ function persistCustomRoomsToDisk() {
         fs.mkdirSync(dataDir, { recursive: true });
       }
       const roomsFile = path.join(dataDir, 'community_rooms.json');
-      const initialIds = new Set(INITIAL_COMMUNITY_ROOMS.map((r) => r.id));
-      const customRooms = Array.from(serverRoomsMap.values()).filter((r) => !initialIds.has(r.id));
-      fs.writeFileSync(roomsFile, JSON.stringify(customRooms, null, 2), 'utf8');
+      fs.writeFileSync(roomsFile, jsonStr, 'utf8');
     }
   } catch {
     // Edge/serverless fallback

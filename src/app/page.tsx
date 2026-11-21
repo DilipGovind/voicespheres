@@ -67,18 +67,26 @@ export default function Home() {
   const fetchRoomsFromServer = async (announceUpdate = false) => {
     setIsRefreshingRooms(true);
     try {
-      // Announce any locally created user rooms to server so edge instances learn them
+      // Announce all locally created and known rooms to server so edge instances learn them
       try {
-        const savedRooms = localStorage.getItem('voicesphere_user_rooms');
-        if (savedRooms) {
-          const parsedList: Room[] = JSON.parse(savedRooms);
-          if (Array.isArray(parsedList) && parsedList.length > 0) {
-            fetch('/api/rooms', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ batch: parsedList }),
-            }).catch(() => {});
-          }
+        const savedUserRooms = localStorage.getItem('voicesphere_user_rooms');
+        const savedKnownRooms = localStorage.getItem('voicesphere_known_rooms');
+        const customRoomsMap = new Map<string, Room>();
+        if (savedUserRooms) {
+          const parsed: Room[] = JSON.parse(savedUserRooms);
+          parsed.forEach((r) => customRoomsMap.set(r.id, r));
+        }
+        if (savedKnownRooms) {
+          const parsed: Room[] = JSON.parse(savedKnownRooms);
+          parsed.forEach((r) => customRoomsMap.set(r.id, r));
+        }
+        const customList = Array.from(customRoomsMap.values());
+        if (customList.length > 0) {
+          fetch('/api/rooms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ batch: customList }),
+          }).catch(() => {});
         }
       } catch {}
 
@@ -90,9 +98,15 @@ export default function Home() {
           INITIAL_COMMUNITY_ROOMS.forEach((r) => map.set(r.id, r));
           prev.forEach((r) => map.set(r.id, r));
           data.rooms.forEach((r: Room) => map.set(r.id, r));
-          return Array.from(map.values()).sort(
+          const sorted = Array.from(map.values()).sort(
             (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
           );
+          try {
+            const initialIds = new Set(INITIAL_COMMUNITY_ROOMS.map((ir) => ir.id));
+            const customOnly = sorted.filter((cr) => !initialIds.has(cr.id));
+            localStorage.setItem('voicesphere_known_rooms', JSON.stringify(customOnly));
+          } catch {}
+          return sorted;
         });
         if (announceUpdate) {
           announce('Discovered latest community rooms across platforms.', 'polite');
@@ -137,14 +151,23 @@ export default function Home() {
       }
       setCurrentUserId(savedId);
 
-      // Load user created rooms from localStorage
+      // Load user created and known community rooms from localStorage
       let allCombinedRooms = [...INITIAL_COMMUNITY_ROOMS];
-      const savedRooms = localStorage.getItem('voicesphere_user_rooms');
-      if (savedRooms) {
-        const parsed: Room[] = JSON.parse(savedRooms);
-        allCombinedRooms = [...parsed, ...INITIAL_COMMUNITY_ROOMS];
+      try {
+        const savedUserRooms = localStorage.getItem('voicesphere_user_rooms');
+        const savedKnownRooms = localStorage.getItem('voicesphere_known_rooms');
+        const customRoomsMap = new Map<string, Room>();
+        if (savedUserRooms) {
+          const parsed: Room[] = JSON.parse(savedUserRooms);
+          parsed.forEach((r) => customRoomsMap.set(r.id, r));
+        }
+        if (savedKnownRooms) {
+          const parsed: Room[] = JSON.parse(savedKnownRooms);
+          parsed.forEach((r) => customRoomsMap.set(r.id, r));
+        }
+        allCombinedRooms = [...Array.from(customRoomsMap.values()), ...INITIAL_COMMUNITY_ROOMS];
         setRooms(allCombinedRooms);
-      }
+      } catch {}
 
       // Check if user has an active room session to resume on page reload/refresh
       let activeSessionRoomId: string | null = null;
@@ -172,6 +195,15 @@ export default function Home() {
             deserializeRoomFromUrl(params, allCombinedRooms);
 
           if (targetRoom) {
+            // Persist discovered room so it remains accessible on the main website directly
+            try {
+              const existing = localStorage.getItem('voicesphere_known_rooms');
+              const parsed: Room[] = existing ? JSON.parse(existing) : [];
+              if (!parsed.some((r) => r.id === targetRoom!.id)) {
+                localStorage.setItem('voicesphere_known_rooms', JSON.stringify([targetRoom, ...parsed]));
+              }
+            } catch {}
+
             setRooms((prev) => {
               if (prev.some((r) => r.id === targetRoom!.id)) return prev;
               return [targetRoom!, ...prev];
@@ -194,6 +226,14 @@ export default function Home() {
               .then((res) => res.json())
               .then((data) => {
                 if (data?.room) {
+                  try {
+                    const existing = localStorage.getItem('voicesphere_known_rooms');
+                    const parsed: Room[] = existing ? JSON.parse(existing) : [];
+                    if (!parsed.some((r) => r.id === data.room.id)) {
+                      localStorage.setItem('voicesphere_known_rooms', JSON.stringify([data.room, ...parsed]));
+                    }
+                  } catch {}
+
                   setRooms((prev) => [data.room, ...prev]);
                   if (isResumingSession) {
                     setInitialRole(activeSessionRole);

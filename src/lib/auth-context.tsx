@@ -42,10 +42,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const syncRemoteUsers = useCallback(async () => {
     try {
+      // 1. Publish locally registered custom users to server so all devices discover them
+      const local = getRegisteredUsers();
+      if (local.length > 0) {
+        fetch('/api/auth/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ users: local }),
+        }).catch(() => {});
+      }
+
+      // 2. Fetch latest aggregated user accounts from server
       const res = await fetch('/api/auth/users');
       const data = await res.json();
       if (data?.users && Array.isArray(data.users)) {
-        const local = getRegisteredUsers();
         const map = new Map<string, UserAccount>();
         local.forEach((u) => map.set(u.id, u));
         data.users.forEach((u: UserAccount) => {
