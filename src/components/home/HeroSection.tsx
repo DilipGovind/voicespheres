@@ -89,21 +89,21 @@ export function HeroSection({
           </h1>
 
           <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-2xl">
-            {t('appTagline')} Join live conversations using your microphone, live captions, typed text, or AAC synthesized speech. No downloads, zero tracking, completely open.
+            {t('appTagline')}. Connect and participate using your voice, live captions, typed text, or AAC synthesized speech. 100% free, zero tracking, completely open.
           </p>
         </div>
 
         {/* Action CTAs */}
-        <div className="flex flex-wrap items-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center gap-2.5 pt-2">
           {/* Primary Action: Discover Rooms */}
           <button
             type="button"
             onClick={scrollToRooms}
-            className="flex items-center space-x-2 rtl:space-x-reverse px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm shadow-xl shadow-blue-600/30 transition transform hover:-translate-y-0.5"
+            className="flex items-center space-x-2 rtl:space-x-reverse h-11 px-5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm shadow-md shadow-blue-600/30 whitespace-nowrap transition transform hover:-translate-y-0.5"
           >
-            <Radio className="w-4 h-4" />
+            <Radio className="w-4 h-4 flex-shrink-0" />
             <span>Discover Active Rooms</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 flex-shrink-0" />
           </button>
 
           {/* User Auth CTA */}
@@ -111,17 +111,17 @@ export function HeroSection({
             <button
               type="button"
               onClick={onCreateRoom}
-              className="flex items-center space-x-2 rtl:space-x-reverse px-5 py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-xl shadow-yellow-400/20 transition transform hover:-translate-y-0.5"
+              className="flex items-center space-x-2 rtl:space-x-reverse h-11 px-5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-md shadow-yellow-500/20 whitespace-nowrap transition transform hover:-translate-y-0.5"
             >
-              <span>{t('createRoom')}</span>
+              <span>Start a Voice Room</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={() => openAuthModal('register')}
-              className="flex items-center space-x-2 rtl:space-x-reverse px-5 py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-xl shadow-yellow-400/20 transition transform hover:-translate-y-0.5"
+              className="flex items-center space-x-2 rtl:space-x-reverse h-11 px-5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-md shadow-yellow-500/20 whitespace-nowrap transition transform hover:-translate-y-0.5"
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="w-4 h-4 flex-shrink-0" />
               <span>Create Free Account (+100 Coins)</span>
             </button>
           )}
@@ -130,9 +130,9 @@ export function HeroSection({
           <button
             type="button"
             onClick={() => openAuthModal('demo')}
-            className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-3.5 rounded-2xl bg-zinc-800/90 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 font-bold text-sm transition"
+            className="flex items-center space-x-2 rtl:space-x-reverse h-11 px-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-bold text-sm whitespace-nowrap transition"
           >
-            <Sparkles className="w-4 h-4 text-yellow-400" />
+            <Sparkles className="w-4 h-4 text-yellow-400 flex-shrink-0" />
             <span>1-Click Demo Personas</span>
           </button>
 
@@ -140,9 +140,9 @@ export function HeroSection({
           <button
             type="button"
             onClick={onOpenAccessibility}
-            className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-3.5 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-yellow-300 border border-yellow-400/30 font-bold text-sm transition"
+            className="flex items-center space-x-2 rtl:space-x-reverse h-11 px-4 rounded-2xl bg-zinc-900/90 hover:bg-zinc-800 text-yellow-300 border border-yellow-400/40 font-bold text-sm whitespace-nowrap transition"
           >
-            <Sliders className="w-4 h-4" />
+            <Sliders className="w-4 h-4 text-yellow-400 flex-shrink-0" />
             <span>{t('accessibilityPresets')}</span>
           </button>
         </div>

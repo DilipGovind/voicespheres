@@ -58,41 +58,41 @@ export function Navbar({
         Skip to main accessible content
       </a>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full">
         {/* Brand */}
-        <div className="flex items-center space-x-2.5 sm:space-x-3 rtl:space-x-reverse min-w-0">
+        <div className="flex items-center space-x-2.5 sm:space-x-3 rtl:space-x-reverse min-w-0 flex-shrink-0">
           <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20">
             <Radio className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
           </div>
           <div className="truncate">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <span className="text-lg sm:text-xl font-black tracking-tight text-white">
+            <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+              <span className="text-lg sm:text-xl font-black tracking-tight text-white whitespace-nowrap">
                 VoiceSphere
               </span>
-              <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">
+              <span className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 whitespace-nowrap">
                 A11Y AAA
               </span>
             </div>
-            <p className="text-[11px] text-zinc-400 hidden sm:block truncate">
-              {settings.simpleLanguageMode ? t('simpleTalkWithText') : t('appTagline').slice(0, 48) + '...'}
+            <p className="text-[11px] text-zinc-400 hidden lg:block truncate max-w-[200px]">
+              {settings.simpleLanguageMode ? t('simpleTalkWithText') : t('appTagline').slice(0, 36) + '...'}
             </p>
           </div>
         </div>
 
         {/* Actions & Accessibility Bar */}
-        <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 rtl:space-x-reverse">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse flex-shrink-0">
           {/* Desktop-only secondary controls */}
-          <div className="hidden md:flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
-            {/* Demo Trial & Coins Shortcut */}
+          <div className="hidden md:flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse">
+            {/* Demo Trial & Coins Shortcut (Visible on xl+ screens) */}
             {onOpenTrialCoins && (
               <button
                 type="button"
                 onClick={onOpenTrialCoins}
                 aria-label="Open 30-Day Trial and Demo Coins"
-                className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs sm:text-sm font-bold transition focus-visible:ring-4 focus-visible:ring-yellow-400"
+                className="hidden xl:flex items-center space-x-1.5 h-9 px-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs font-bold transition whitespace-nowrap flex-shrink-0 focus-visible:ring-4 focus-visible:ring-yellow-400"
               >
-                <Coins className="w-4 h-4 text-yellow-400" />
-                <span>30d Demo Trial</span>
+                <Coins className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
+                <span className="whitespace-nowrap">30d Demo Trial</span>
               </button>
             )}
 
@@ -102,7 +102,7 @@ export function Navbar({
                 type="button"
                 onClick={onOpenPrivacy}
                 aria-label="View Prototype Privacy Notice"
-                className="p-1.5 sm:p-2 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition"
+                className="h-9 w-9 flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition flex-shrink-0"
                 title="Privacy Notice (No audio recording)"
               >
                 <ShieldCheck className="w-4 h-4" />
@@ -110,16 +110,16 @@ export function Navbar({
             )}
 
             {/* Language Selector (21 Languages) */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setLangMenuOpen(!langMenuOpen)}
                 aria-label={`Current language: ${localeInfo.nativeName}. Click to change language.`}
                 aria-expanded={langMenuOpen}
-                className="flex items-center space-x-1.5 rtl:space-x-reverse px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 focus:ring-4 focus:ring-yellow-400 transition"
+                className="flex items-center space-x-1.5 rtl:space-x-reverse h-9 px-2.5 sm:px-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-yellow-400 transition"
               >
-                <Globe className="w-4 h-4 text-blue-400" />
-                <span>{localeInfo.nativeName}</span>
+                <Globe className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                <span className="whitespace-nowrap">{localeInfo.nativeName}</span>
               </button>
 
               {langMenuOpen && (
@@ -149,7 +149,7 @@ export function Navbar({
                               : 'text-zinc-200 hover:bg-zinc-800'
                           }`}
                         >
-                          <span>{info.nativeName}</span>
+                          <span className="whitespace-nowrap">{info.nativeName}</span>
                           <span className="text-[11px] opacity-75 font-mono">{info.country}</span>
                         </button>
                       );
@@ -161,17 +161,17 @@ export function Navbar({
 
             {/* User Account / Auth Shortcut */}
             {user ? (
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   aria-expanded={userDropdownOpen}
                   aria-label={`Account menu for ${user.displayName}`}
-                  className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 transition"
+                  className="flex items-center space-x-1.5 h-9 px-2.5 sm:px-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 whitespace-nowrap flex-shrink-0 transition"
                 >
-                  <span className="text-base">{user.avatar || '👤'}</span>
-                  <span className="max-w-[110px] truncate">{user.displayName}</span>
-                  <span className="hidden xl:inline text-[11px] font-mono px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
+                  <span className="text-base flex-shrink-0">{user.avatar || '👤'}</span>
+                  <span className="max-w-[100px] truncate whitespace-nowrap">{user.displayName}</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 whitespace-nowrap">
                     🪙 {user.coinsBalance}
                   </span>
                 </button>
@@ -233,11 +233,11 @@ export function Navbar({
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-1.5">
+              <div className="flex items-center space-x-1.5 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => (onOpenAuth || openAuthModal)('login')}
-                  className="flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs sm:text-sm font-semibold transition"
+                  className="flex items-center space-x-1 h-9 px-2.5 sm:px-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs sm:text-sm font-semibold whitespace-nowrap flex-shrink-0 transition"
                 >
                   <LogIn className="w-3.5 h-3.5 text-blue-400" />
                   <span>Sign In</span>
@@ -245,7 +245,7 @@ export function Navbar({
                 <button
                   type="button"
                   onClick={() => (onOpenAuth || openAuthModal)('register')}
-                  className="flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black text-xs sm:text-sm font-bold shadow-sm transition"
+                  className="flex items-center space-x-1 h-9 px-2.5 sm:px-3 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap flex-shrink-0 transition"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>Register</span>
@@ -259,12 +259,13 @@ export function Navbar({
             type="button"
             onClick={onOpenAccessibility}
             aria-label={`Accessibility Center. Currently in ${settings.preset} mode.`}
-            className="flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border-2 border-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 text-xs sm:text-sm font-bold shadow-sm focus:ring-4 focus:ring-yellow-400 transition"
+            className="flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse h-9 px-2.5 sm:px-3 rounded-xl border-2 border-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-yellow-400 transition"
           >
-            <Sliders className="w-4 h-4 text-yellow-400 stroke-[2.5]" />
-            <span className="hidden md:inline">{t('accessibilityCenter')}</span>
-            <span className="px-1.5 py-0.5 rounded bg-yellow-400 text-black text-[10px] font-black uppercase">
-              {settings.preset === 'DEFAULT' ? 'A11Y' : settings.preset.split('_')[0]}
+            <Sliders className="w-3.5 h-3.5 text-yellow-400 stroke-[2.5] flex-shrink-0" />
+            <span className="hidden xl:inline whitespace-nowrap">{t('accessibilityCenter')}</span>
+            <span className="hidden sm:inline xl:hidden whitespace-nowrap">A11Y</span>
+            <span className="px-1.5 py-0.5 rounded bg-yellow-400 text-black text-[10px] font-black uppercase whitespace-nowrap flex-shrink-0">
+              {settings.preset === 'DEFAULT' ? 'Preset' : settings.preset.split('_')[0]}
             </span>
           </button>
 
@@ -274,11 +275,11 @@ export function Navbar({
               type="button"
               onClick={onCreateRoom}
               aria-label={settings.simpleLanguageMode ? 'Create New Voice Room' : t('createRoom')}
-              className="hidden sm:flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/30 focus:ring-4 focus:ring-blue-400 transition"
+              className="hidden sm:flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/30 whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-blue-400 transition"
             >
-              <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden md:inline">
-                {settings.simpleLanguageMode ? 'Start Room' : t('createRoom')}
+              <PlusCircle className="w-3.5 h-3.5 stroke-[2.5] flex-shrink-0" />
+              <span className="hidden md:inline whitespace-nowrap">
+                {settings.simpleLanguageMode ? 'Start Room' : 'Create Room'}
               </span>
             </button>
           )}
