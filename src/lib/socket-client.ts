@@ -288,7 +288,7 @@ class RealtimeClient {
       requesterSessionId: this.sessionId,
     });
 
-    // Start periodic presence heartbeat every 3.5 seconds
+    // Start periodic presence heartbeat every 1.5 seconds for instant multi-device presence
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     this.heartbeatInterval = setInterval(() => {
       if (this.roomId && this.currentUser) {
@@ -297,9 +297,9 @@ class RealtimeClient {
           user: this.currentUser,
         });
       }
-    }, 3500);
+    }, 1500);
 
-    // Serverless HTTP Sync fallback ping
+    // Serverless HTTP Sync fallback ping every 2 seconds
     if (this.serverSyncInterval) clearInterval(this.serverSyncInterval);
     this.serverSyncInterval = setInterval(() => {
       if (this.roomId && this.currentUser) {
@@ -324,7 +324,7 @@ class RealtimeClient {
           })
           .catch(() => {});
       }
-    }, 4000);
+    }, 2000);
   }
 
   /**

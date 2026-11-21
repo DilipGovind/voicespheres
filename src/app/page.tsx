@@ -161,9 +161,17 @@ export default function Home() {
 
       fetchRoomsFromServer();
 
+      // Fast periodic room sync: every 2 seconds
       const syncInterval = setInterval(() => {
         fetchRoomsFromServer();
-      }, 4500);
+      }, 2000);
+
+      // Instant refresh when user returns to tab
+      const handleFocus = () => fetchRoomsFromServer();
+      window.addEventListener('focus', handleFocus);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') fetchRoomsFromServer();
+      });
 
       const unsubRoomCreated = realtimeClient.on(
         'global:room_created',

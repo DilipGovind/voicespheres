@@ -61,7 +61,13 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
 
   useEffect(() => {
     loadFeedback();
-    const interval = setInterval(loadFeedback, 6000);
+    const interval = setInterval(loadFeedback, 2000);
+
+    const handleFocus = () => loadFeedback();
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') loadFeedback();
+    });
 
     const unsub = realtimeClient.on('global:feedback_submitted', (payload: any) => {
       const newFeedback: FeedbackItem = payload?.feedback || payload;
@@ -79,6 +85,7 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
 
     return () => {
       clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
       unsub();
     };
   }, [loadFeedback]);

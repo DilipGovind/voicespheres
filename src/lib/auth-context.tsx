@@ -87,8 +87,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Sync remote users on startup
     syncRemoteUsers();
 
-    // Poll periodically for cross-device registrations
-    const interval = setInterval(syncRemoteUsers, 8000);
+    // Fast polling: every 2 seconds for instant cross-device detection
+    const interval = setInterval(syncRemoteUsers, 2000);
+
+    // Instant sync on window focus or visibility restore
+    const handleFocus = () => syncRemoteUsers();
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncRemoteUsers();
+    });
 
     // Listen to real-time cross-device registration events
     const unsub = realtimeClient.on('global:user_registered', (payload: any) => {
@@ -107,14 +114,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
       unsub();
     };
   }, [syncRemoteUsers]);
 
   const openAuthModal = useCallback((tab: 'login' | 'register' = 'login') => {
+    syncRemoteUsers(); // Instant sync when user opens auth dialog
     setAuthModalInitialTab(tab);
     setIsAuthModalOpen(true);
-  }, []);
+  }, [syncRemoteUsers]);
 
   const login = useCallback(
     async (input: LoginInput): Promise<{ success: boolean; error?: string }> => {

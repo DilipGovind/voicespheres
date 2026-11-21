@@ -20,8 +20,8 @@ export const INITIAL_COMMUNITY_USERS: ServerUserRecord[] = [
     isAacUser: true,
     coinsBalance: 100,
     trialDaysLeft: 365,
-    createdAt: Date.now() - 7 * 86400000,
-    lastLoginAt: Date.now(),
+    createdAt: 1732180000000,
+    lastLoginAt: 1732180000000,
   },
   {
     id: 'user_elena',
@@ -38,8 +38,8 @@ export const INITIAL_COMMUNITY_USERS: ServerUserRecord[] = [
     isAacUser: false,
     coinsBalance: 100,
     trialDaysLeft: 365,
-    createdAt: Date.now() - 14 * 86400000,
-    lastLoginAt: Date.now(),
+    createdAt: 1732170000000,
+    lastLoginAt: 1732170000000,
   },
   {
     id: 'user_amina',
@@ -56,8 +56,8 @@ export const INITIAL_COMMUNITY_USERS: ServerUserRecord[] = [
     isAacUser: false,
     coinsBalance: 100,
     trialDaysLeft: 365,
-    createdAt: Date.now() - 20 * 86400000,
-    lastLoginAt: Date.now(),
+    createdAt: 1732160000000,
+    lastLoginAt: 1732160000000,
   },
   {
     id: 'user_david',
@@ -74,8 +74,8 @@ export const INITIAL_COMMUNITY_USERS: ServerUserRecord[] = [
     isAacUser: false,
     coinsBalance: 100,
     trialDaysLeft: 365,
-    createdAt: Date.now() - 30 * 86400000,
-    lastLoginAt: Date.now(),
+    createdAt: 1732150000000,
+    lastLoginAt: 1732150000000,
   },
 ];
 
