@@ -175,30 +175,30 @@ function ParticipantCard({
       aria-label={`${participant.name}, ${participant.role}. ${
         participant.isMuted ? 'Muted' : 'Microphone unmuted'
       }. ${participant.isAacUser ? 'Using AAC synthesized speech' : ''}`}
-      className={`relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all bg-zinc-900/90 text-center ${
+      className={`glass-card relative flex flex-col items-center justify-center p-4 rounded-2xl border transition-all text-center ${
         showRipple
-          ? 'border-emerald-400 shadow-lg shadow-emerald-500/20 ring-4 ring-emerald-400/40'
-          : 'border-zinc-800 hover:border-zinc-700'
+          ? 'border-emerald-400 shadow-xl shadow-emerald-500/25 ring-4 ring-emerald-400/30'
+          : 'border-white/[0.08] hover:border-white/20'
       }`}
     >
       {/* Hand Raised Banner */}
       {participant.isHandRaised && (
         <div
           aria-label="Hand raised to speak"
-          className="absolute -top-2 px-2 py-0.5 rounded-full bg-amber-400 text-black text-[11px] font-black flex items-center space-x-1 shadow-md z-10"
+          className="absolute -top-2.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-black text-[11px] font-black flex items-center space-x-1 shadow-md shadow-amber-500/30 z-10 animate-bounce"
         >
-          <Hand className="w-3.5 h-3.5" />
+          <Hand className="w-3 h-3 stroke-[2.5]" />
           <span>Hand Raised</span>
         </div>
       )}
 
       {/* Avatar Container */}
-      <div className="relative my-2">
+      <div className="relative my-2.5">
         <div
-          className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black shadow-inner border-2 ${
+          className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black shadow-inner border-2 transition-all ${
             showRipple
-              ? 'border-emerald-400 animate-pulse'
-              : 'border-zinc-700 bg-zinc-800 text-zinc-100'
+              ? 'border-emerald-400 speaking-glow-ring scale-105'
+              : 'border-white/10 bg-zinc-800/90 text-zinc-100'
           }`}
         >
           {participant.avatar || participant.name.slice(0, 2).toUpperCase()}

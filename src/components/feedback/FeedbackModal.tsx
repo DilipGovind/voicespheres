@@ -137,13 +137,13 @@ export function FeedbackModal({ isOpen, onClose, onFeedbackSubmitted }: Feedback
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl overflow-y-auto animate-in fade-in duration-200"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="feedback-dialog-title"
-        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl mx-auto rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-5 sm:p-8 text-zinc-100 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto overflow-x-hidden"
+        className="glass-panel relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl mx-auto rounded-3xl p-5 sm:p-8 text-zinc-100 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto overflow-x-hidden border border-white/10"
       >
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -326,11 +326,11 @@ export function FeedbackModal({ isOpen, onClose, onFeedbackSubmitted }: Feedback
           </label>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-zinc-800">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-white/[0.08]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold transition"
+              className="btn-glass px-4.5 py-2.5 rounded-2xl text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold"
             >
               Cancel
             </button>
@@ -338,7 +338,7 @@ export function FeedbackModal({ isOpen, onClose, onFeedbackSubmitted }: Feedback
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black text-xs sm:text-sm font-extrabold shadow-md transition flex items-center space-x-2"
+              className="btn-glow-accent px-6 py-2.5 rounded-2xl disabled:opacity-50 text-black text-xs sm:text-sm font-black shadow-lg flex items-center space-x-2"
             >
               <span>{isSubmitting ? 'Sending...' : 'Submit Feedback'}</span>
               <Send className="w-3.5 h-3.5" />

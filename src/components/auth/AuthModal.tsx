@@ -132,24 +132,24 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl overflow-y-auto animate-in fade-in duration-200"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-modal-title"
-        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-lg mx-auto rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-5 sm:p-8 text-zinc-100 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto overflow-x-hidden"
+        className="glass-panel relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-lg mx-auto rounded-3xl p-6 sm:p-8 text-zinc-100 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto overflow-x-hidden border border-white/10"
       >
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
+          <div className="space-y-1.5">
+            <span className="px-3 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 text-xs font-black uppercase tracking-wider">
               100% Free Account
             </span>
             <h2 id="auth-modal-title" className="text-2xl font-black text-white pt-1">
               {activeTab === 'login' ? 'Sign In to VoiceSphere' : 'Join VoiceSphere Free'}
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-400">
+            <p className="text-xs sm:text-sm text-zinc-400 font-normal">
               {activeTab === 'login'
                 ? 'Access your voice rooms, saved AAC phrases, and accessibility preferences.'
                 : 'Real name or pseudonym: 100% free forever, zero ads, zero tracking.'}
@@ -160,23 +160,23 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
             type="button"
             onClick={onClose}
             aria-label="Close authentication window"
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+            className="p-2 rounded-2xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex rounded-2xl bg-zinc-900/90 p-1 border border-zinc-800 text-xs sm:text-sm font-bold">
+        <div className="flex rounded-2xl bg-zinc-900/90 p-1 border border-white/10 text-xs sm:text-sm font-bold">
           <button
             type="button"
             onClick={() => {
               setActiveTab('login');
               setErrorMessage('');
             }}
-            className={`flex-1 py-2 sm:py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 ${
+            className={`flex-1 py-2 sm:py-2.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
               activeTab === 'login'
-                ? 'bg-blue-600 text-white shadow-md'
+                ? 'btn-glow-primary'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -190,9 +190,9 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
               setActiveTab('register');
               setErrorMessage('');
             }}
-            className={`flex-1 py-2 sm:py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 ${
+            className={`flex-1 py-2 sm:py-2.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
               activeTab === 'register'
-                ? 'bg-yellow-400 text-black shadow-md'
+                ? 'btn-glow-accent'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -277,9 +277,9 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-sm shadow-md transition flex items-center justify-center space-x-2"
+              className="btn-glow-primary w-full py-3.5 rounded-2xl disabled:opacity-50 font-bold text-sm shadow-xl flex items-center justify-center space-x-2"
             >
-              <span>{isSubmitting ? 'Signing In...' : 'Sign In'}</span>
+              <span>{isSubmitting ? 'Signing In...' : 'Sign In to VoiceSphere'}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
 
@@ -407,7 +407,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalPr
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-2xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black font-extrabold text-sm shadow-md transition flex items-center justify-center space-x-2"
+              className="btn-glow-accent w-full py-3.5 rounded-2xl disabled:opacity-50 font-black text-sm shadow-xl flex items-center justify-center space-x-2"
             >
               <span>{isSubmitting ? 'Creating Free Account...' : 'Complete Free Registration'}</span>
               <ChevronRight className="w-4 h-4" />

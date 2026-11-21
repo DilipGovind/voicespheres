@@ -133,23 +133,23 @@ export function PresetSelector() {
             type="button"
             role="radio"
             aria-checked={isSelected}
-            className={`flex flex-col text-left p-4 rounded-xl border-2 transition-all relative ${
+            className={`flex flex-col text-left p-5 rounded-2xl transition-all relative ${
               isSelected
-                ? 'border-yellow-400 bg-yellow-400/10 shadow-lg ring-2 ring-yellow-400/50'
-                : 'border-zinc-700 bg-zinc-900/60 hover:border-zinc-500 hover:bg-zinc-800/80 text-zinc-100'
+                ? 'border-2 border-yellow-400 bg-gradient-to-br from-yellow-500/15 via-zinc-900 to-zinc-950 shadow-xl shadow-yellow-500/10 ring-2 ring-yellow-400/40 scale-[1.01]'
+                : 'glass-card border border-white/[0.08] hover:border-white/20 text-zinc-100'
             }`}
           >
-            <div className="flex items-start justify-between w-full mb-2">
+            <div className="flex items-start justify-between w-full mb-2.5">
               <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                <div className="p-2 rounded-lg bg-zinc-800/80 border border-zinc-700">
+                <div className="p-2.5 rounded-xl bg-zinc-900/90 border border-white/10 shadow-sm">
                   {preset.icon}
                 </div>
                 <div>
                   <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-yellow-400 border border-zinc-700">
+                    <span className="text-[11px] font-mono font-black px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
                       Preset {preset.letter}
                     </span>
-                    <h3 className="font-bold text-base md:text-lg">{preset.title}</h3>
+                    <h3 className="font-extrabold text-base md:text-lg text-white">{preset.title}</h3>
                   </div>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export function PresetSelector() {
               {isSelected && (
                 <div
                   aria-label="Currently active preset"
-                  className="flex items-center space-x-1 rtl:space-x-reverse px-2 py-1 rounded-full bg-yellow-400 text-black font-semibold text-xs"
+                  className="flex items-center space-x-1 rtl:space-x-reverse px-2.5 py-1 rounded-full bg-yellow-400 text-black font-black text-xs shadow-md"
                 >
                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                   <span>Active</span>
@@ -165,7 +165,7 @@ export function PresetSelector() {
               )}
             </div>
 
-            <p className="text-xs md:text-sm text-zinc-300 mb-3 leading-relaxed">
+            <p className="text-xs md:text-sm text-zinc-300 mb-3.5 leading-relaxed font-normal">
               {preset.description}
             </p>
 
@@ -173,7 +173,7 @@ export function PresetSelector() {
               {preset.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-[11px] px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 border border-zinc-700/60 font-medium"
+                  className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/5 text-zinc-300 border border-white/10 font-medium"
                 >
                   {tag}
                 </span>

@@ -51,12 +51,12 @@ export function PlatformFeatures() {
   ];
 
   return (
-    <section aria-labelledby="features-heading" className="space-y-6 pt-4 border-t border-zinc-800">
+    <section aria-labelledby="features-heading" className="space-y-6 pt-6 border-t border-white/[0.08]">
       <div className="max-w-2xl">
-        <span className="px-2.5 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30 text-xs font-bold uppercase tracking-wider">
+        <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-300 border border-blue-500/30 text-xs font-black uppercase tracking-wider">
           Accessibility as Architecture
         </span>
-        <h2 id="features-heading" className="text-xl sm:text-2xl font-black text-white mt-1">
+        <h2 id="features-heading" className="text-xl sm:text-2xl font-black text-white mt-2">
           Built From Day One For Complete Cognitive & Physical Inclusion
         </h2>
         <p className="text-xs sm:text-sm text-zinc-400 mt-1">
@@ -64,28 +64,28 @@ export function PlatformFeatures() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {features.map((feat, idx) => {
           const Icon = feat.icon;
           return (
             <div
               key={idx}
-              className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-3 hover:bg-zinc-900 hover:border-zinc-700 transition"
+              className="glass-card rounded-3xl p-6 space-y-3.5 group hover:border-blue-500/30"
             >
               <div className="flex items-center justify-between">
-                <div className={`p-2.5 rounded-2xl bg-zinc-800 border border-zinc-700/60 ${feat.iconColor}`}>
+                <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-white/10 group-hover:scale-110 group-hover:border-white/20 transition-all ${feat.iconColor}`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-white/5 text-zinc-300 border border-white/10">
                   {feat.badge}
                 </span>
               </div>
 
-              <h3 className="font-extrabold text-base text-white">
+              <h3 className="font-extrabold text-base text-white group-hover:text-blue-300 transition-colors">
                 {feat.title}
               </h3>
 
-              <p className="text-xs text-zinc-300 leading-relaxed">
+              <p className="text-xs text-zinc-300 leading-relaxed font-normal">
                 {feat.description}
               </p>
             </div>

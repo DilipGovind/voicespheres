@@ -204,3 +204,145 @@ html.reduced-motion *,
 .skip-link:focus {
   top: 12px;
 }
+
+/* ==========================================================================
+   VoiceSphere 2.0 Modern Look Design System & Utility Classes
+   ========================================================================== */
+
+/* Modern Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(9, 10, 15, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Glassmorphism Cards & Panels */
+.glass-card {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.7) 0%, rgba(9, 10, 15, 0.8) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 25px -5px rgba(59, 130, 246, 0.15);
+}
+
+.glass-panel {
+  background: rgba(10, 12, 18, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+.glass-dock {
+  background: rgba(12, 14, 22, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 30px -10px rgba(59, 130, 246, 0.2);
+}
+
+/* High-Impact Modern Button Classes */
+.btn-glow-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 20px -2px rgba(79, 70, 229, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-glow-primary:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  box-shadow: 0 6px 25px 0px rgba(99, 102, 241, 0.6);
+  transform: translateY(-1px) scale(1.01);
+}
+.btn-glow-primary:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-glow-accent {
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 4px 18px -2px rgba(234, 179, 8, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-glow-accent:hover {
+  background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+  box-shadow: 0 6px 24px 0px rgba(250, 204, 21, 0.6);
+  transform: translateY(-1px) scale(1.01);
+}
+.btn-glow-accent:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f4f4f5;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.btn-glass:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-danger-glass {
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  transition: all 0.2s ease;
+}
+.btn-danger-glass:hover {
+  background: rgba(220, 38, 38, 0.3);
+  border-color: rgba(239, 68, 68, 0.7);
+  color: #ffffff;
+  box-shadow: 0 0 20px -3px rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Sound Wave Bars Animation */
+@keyframes soundWave {
+  0%, 100% { height: 4px; }
+  50% { height: 18px; }
+}
+.soundwave-bar {
+  width: 3px;
+  background: #38bdf8;
+  border-radius: 9999px;
+  display: inline-block;
+  animation: soundWave 1.2s ease-in-out infinite;
+}
+.soundwave-bar:nth-child(2) { animation-delay: 0.2s; }
+.soundwave-bar:nth-child(3) { animation-delay: 0.4s; }
+.soundwave-bar:nth-child(4) { animation-delay: 0.1s; }
+.soundwave-bar:nth-child(5) { animation-delay: 0.3s; }
+
+/* Subtle Glow Border Pulse */
+@keyframes subtleGlow {
+  0%, 100% { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 0 15px -3px rgba(56, 189, 248, 0.2); }
+  50% { border-color: rgba(147, 51, 234, 0.6); box-shadow: 0 0 25px -3px rgba(147, 51, 234, 0.35); }
+}
+.speaking-glow-ring {
+  animation: subtleGlow 2s infinite ease-in-out;
+}

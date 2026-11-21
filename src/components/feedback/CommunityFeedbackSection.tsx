@@ -118,17 +118,17 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
   };
 
   return (
-    <section aria-labelledby="feedback-heading" className="space-y-6 pt-4 border-t border-zinc-800">
+    <section aria-labelledby="feedback-heading" className="space-y-6 pt-6 border-t border-white/[0.08]">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30 text-xs font-bold uppercase tracking-wider">
+            <span className="px-3 py-1 rounded-full bg-yellow-400/15 text-yellow-300 border border-yellow-400/30 text-xs font-black uppercase tracking-wider">
               Community Voice & Feedback
             </span>
             <span className="text-xs text-zinc-400">• Built with & for you</span>
           </div>
-          <h2 id="feedback-heading" className="text-xl sm:text-2xl font-black text-white mt-1">
+          <h2 id="feedback-heading" className="text-xl sm:text-2xl font-black text-white mt-2">
             Real Community Thoughts, Reviews & Ideas
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400">
@@ -139,10 +139,10 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
         <button
           type="button"
           onClick={onOpenFeedback}
-          className="flex-shrink-0 flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-xs sm:text-sm shadow-md transition"
+          className="btn-glow-accent flex-shrink-0 flex items-center space-x-2 px-5 py-2.5 rounded-2xl font-black text-xs sm:text-sm shadow-md"
         >
           <MessageSquare className="w-4 h-4" />
-          <span>Give Your Feedback</span>
+          <span>+ Share Community Note</span>
         </button>
       </div>
 
@@ -151,10 +151,10 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
         <button
           type="button"
           onClick={() => setSelectedFilter('all')}
-          className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
             selectedFilter === 'all'
-              ? 'bg-yellow-400 text-black'
-              : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'
+              ? 'bg-yellow-400 text-black shadow-md'
+              : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
           }`}
         >
           All ({feedbackList.length})
@@ -162,10 +162,10 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
         <button
           type="button"
           onClick={() => setSelectedFilter('accessibility')}
-          className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
             selectedFilter === 'accessibility'
-              ? 'bg-yellow-400 text-black'
-              : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'
+              ? 'bg-yellow-400 text-black shadow-md'
+              : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
           }`}
         >
           Accessibility
@@ -173,10 +173,10 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
         <button
           type="button"
           onClick={() => setSelectedFilter('audio_quality')}
-          className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
             selectedFilter === 'audio_quality'
-              ? 'bg-yellow-400 text-black'
-              : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'
+              ? 'bg-yellow-400 text-black shadow-md'
+              : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
           }`}
         >
           Audio Quality
@@ -184,10 +184,10 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
         <button
           type="button"
           onClick={() => setSelectedFilter('feature_request')}
-          className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
             selectedFilter === 'feature_request'
-              ? 'bg-yellow-400 text-black'
-              : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'
+              ? 'bg-yellow-400 text-black shadow-md'
+              : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
           }`}
         >
           Feature Ideas
@@ -195,10 +195,10 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
         <button
           type="button"
           onClick={() => setSelectedFilter('languages')}
-          className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-full font-bold transition-all whitespace-nowrap ${
             selectedFilter === 'languages'
-              ? 'bg-yellow-400 text-black'
-              : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'
+              ? 'bg-yellow-400 text-black shadow-md'
+              : 'bg-white/5 text-zinc-300 hover:bg-white/10 border border-white/10'
           }`}
         >
           Languages & RTL
@@ -206,28 +206,28 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
       </div>
 
       {/* Feedback Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredItems.map((item) => {
           const badge = getCategoryBadge(item.category);
 
           return (
             <div
               key={item.id}
-              className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-5 flex flex-col justify-between space-y-3 hover:border-zinc-700 transition"
+              className="glass-card rounded-3xl p-6 flex flex-col justify-between space-y-4 hover:border-yellow-400/40"
             >
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {/* Category & Star Rating */}
                 <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${badge.color}`}>
+                  <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${badge.color}`}>
                     {badge.label}
                   </span>
 
-                  <div className="flex items-center space-x-0.5 text-yellow-400">
+                  <div className="flex items-center space-x-1 text-yellow-400">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
                         className={`w-3.5 h-3.5 ${
-                          i < item.rating ? 'fill-yellow-400' : 'text-zinc-700'
+                          i < item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-700'
                         }`}
                       />
                     ))}
@@ -235,7 +235,7 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
                 </div>
 
                 {/* Title */}
-                <h3 className="font-extrabold text-sm sm:text-base text-white">
+                <h3 className="font-extrabold text-base text-white">
                   {item.title}
                 </h3>
 

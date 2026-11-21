@@ -49,18 +49,18 @@ export function AccessibilityCenterModal({ isOpen, onClose }: AccessibilityCente
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto animate-in fade-in duration-200"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="a11y-center-title"
-        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border-2 border-yellow-400 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden"
+        className="glass-panel relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-white/10 text-zinc-100 shadow-2xl overflow-hidden"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/90">
-          <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="p-2 rounded-xl bg-yellow-400 text-black">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/[0.08] bg-zinc-900/60">
+          <div className="flex items-center space-x-3.5 rtl:space-x-reverse">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-yellow-400 to-amber-500 text-black shadow-md shadow-yellow-500/20">
               <Sliders className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
@@ -76,9 +76,9 @@ export function AccessibilityCenterModal({ isOpen, onClose }: AccessibilityCente
           <button
             onClick={handleClose}
             aria-label="Close Accessibility Center"
-            className="p-2 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 focus:ring-4 focus:ring-yellow-400 transition"
+            className="p-2 rounded-2xl border border-white/10 bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 focus:ring-4 focus:ring-yellow-400 transition-all"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -703,10 +703,10 @@ export function AccessibilityCenterModal({ isOpen, onClose }: AccessibilityCente
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-zinc-800 bg-zinc-900/90">
+        <div className="flex items-center justify-between px-6 py-4.5 border-t border-white/[0.08] bg-zinc-900/60">
           <button
             onClick={handleReset}
-            className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 text-sm font-semibold transition"
+            className="btn-glass flex items-center space-x-2 rtl:space-x-reverse px-4.5 py-2.5 rounded-2xl text-zinc-300 hover:text-white text-sm font-semibold"
           >
             <RotateCcw className="w-4 h-4" />
             <span>{t('resetDefaults')}</span>
@@ -714,7 +714,7 @@ export function AccessibilityCenterModal({ isOpen, onClose }: AccessibilityCente
 
           <button
             onClick={handleClose}
-            className="flex items-center space-x-2 rtl:space-x-reverse px-6 py-2.5 rounded-xl bg-yellow-400 text-black hover:bg-yellow-300 text-sm font-bold shadow-lg transition"
+            className="btn-glow-accent flex items-center space-x-2 rtl:space-x-reverse px-6 py-2.5 rounded-2xl text-black text-sm font-black shadow-lg"
           >
             <Save className="w-4 h-4 stroke-[2.5]" />
             <span>{t('savePreferences')}</span>

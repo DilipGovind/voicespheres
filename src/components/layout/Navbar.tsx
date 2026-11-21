@@ -52,7 +52,7 @@ export function Navbar({
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-800 bg-zinc-950/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-zinc-950/85 backdrop-blur-xl shadow-lg shadow-black/40">
       {/* Skip link for keyboard & screen reader accessibility */}
       <a href="#main-content" className="skip-link">
         Skip to main accessible content
@@ -60,39 +60,41 @@ export function Navbar({
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full">
         {/* Brand */}
-        <div className="flex items-center space-x-2.5 sm:space-x-3 rtl:space-x-reverse min-w-0 flex-shrink-0">
-          <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20">
-            <Radio className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
+        <div className="flex items-center space-x-2.5 sm:space-x-3.5 rtl:space-x-reverse min-w-0 flex-shrink-0">
+          <div className="relative flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-white shadow-lg shadow-indigo-500/25 border border-white/20">
+            <Radio className="w-5 h-5 animate-pulse" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-zinc-950" />
           </div>
           <div className="truncate">
-            <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
-              <span className="text-lg sm:text-xl font-black tracking-tight text-white whitespace-nowrap">
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent whitespace-nowrap">
                 VoiceSphere
               </span>
-              <span className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 whitespace-nowrap">
-                A11Y AAA
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 tracking-wide">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                AAA 2.0
               </span>
             </div>
-            <p className="text-[11px] text-zinc-400 hidden lg:block truncate max-w-[200px]">
+            <p className="text-[11px] text-zinc-400 hidden lg:block truncate max-w-[220px]">
               {settings.simpleLanguageMode ? t('simpleTalkWithText') : t('appTagline').slice(0, 36) + '...'}
             </p>
           </div>
         </div>
 
         {/* Actions & Accessibility Bar */}
-        <div className="flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse flex-shrink-0">
+        <div className="flex items-center space-x-2 sm:space-x-2.5 rtl:space-x-reverse flex-shrink-0">
           {/* Desktop-only secondary controls */}
-          <div className="hidden md:flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse">
+          <div className="hidden md:flex items-center space-x-2 rtl:space-x-reverse">
             {/* Community Feedback Shortcut */}
             {onOpenFeedback && (
               <button
                 type="button"
                 onClick={onOpenFeedback}
                 aria-label="Share Feedback and Ideas"
-                className="flex items-center space-x-1.5 h-9 px-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs font-bold transition whitespace-nowrap flex-shrink-0 focus-visible:ring-4 focus-visible:ring-yellow-400"
+                className="flex items-center space-x-1.5 h-9 px-3 rounded-full border border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs font-bold transition-all shadow-sm shadow-yellow-500/10 whitespace-nowrap flex-shrink-0 focus-visible:ring-4 focus-visible:ring-yellow-400 hover:scale-[1.02] active:scale-[0.98]"
               >
                 <MessageSquareHeart className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
-                <span className="whitespace-nowrap">Feedback</span>
+                <span className="whitespace-nowrap">Community Notes</span>
               </button>
             )}
 
@@ -102,8 +104,8 @@ export function Navbar({
                 type="button"
                 onClick={onOpenPrivacy}
                 aria-label="View Prototype Privacy Notice"
-                className="h-9 w-9 flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition flex-shrink-0"
-                title="Privacy Notice (No audio recording)"
+                className="h-9 w-9 flex items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-emerald-400 transition-all flex-shrink-0 hover:scale-105 active:scale-95"
+                title="Privacy First (Zero tracking, mutual transcript consent)"
               >
                 <ShieldCheck className="w-4 h-4" />
               </button>
@@ -116,7 +118,7 @@ export function Navbar({
                 onClick={() => setLangMenuOpen(!langMenuOpen)}
                 aria-label={`Current language: ${localeInfo.nativeName}. Click to change language.`}
                 aria-expanded={langMenuOpen}
-                className="flex items-center space-x-1.5 rtl:space-x-reverse h-9 px-2.5 sm:px-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-yellow-400 transition"
+                className="btn-glass flex items-center space-x-1.5 rtl:space-x-reverse h-9 px-3 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-yellow-400 transition-all"
               >
                 <Globe className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                 <span className="whitespace-nowrap">{localeInfo.nativeName}</span>
@@ -126,9 +128,9 @@ export function Navbar({
                 <div
                   role="menu"
                   aria-label="Select platform language"
-                  className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-2xl border-2 border-zinc-700 bg-zinc-950 p-2 shadow-2xl z-50 divide-y divide-zinc-800/60"
+                  className="glass-panel absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-2xl p-2 shadow-2xl z-50 divide-y divide-white/[0.06]"
                 >
-                  <div className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  <div className="px-2.5 py-1.5 text-xs font-bold text-zinc-400 uppercase tracking-wider">
                     21 Global Languages
                   </div>
                   <div className="py-1">
@@ -143,10 +145,10 @@ export function Navbar({
                             setLocale(code);
                             setLangMenuOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs sm:text-sm font-medium transition ${
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium transition ${
                             isSelected
-                              ? 'bg-yellow-400 text-black font-bold'
-                              : 'text-zinc-200 hover:bg-zinc-800'
+                              ? 'bg-yellow-400 text-black font-bold shadow-md'
+                              : 'text-zinc-200 hover:bg-white/10'
                           }`}
                         >
                           <span className="whitespace-nowrap">{info.nativeName}</span>
@@ -167,17 +169,17 @@ export function Navbar({
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   aria-expanded={userDropdownOpen}
                   aria-label={`Account menu for ${user.displayName}`}
-                  className="flex items-center space-x-1.5 h-9 px-2.5 sm:px-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 whitespace-nowrap flex-shrink-0 transition"
+                  className="btn-glass flex items-center space-x-2 h-9 px-3 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all"
                 >
                   <span className="text-base flex-shrink-0">{user.avatar || '👤'}</span>
                   <span className="max-w-[100px] truncate whitespace-nowrap">{user.displayName}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
+                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
                     Free
                   </span>
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 rounded-2xl border-2 border-zinc-700 bg-zinc-950 p-2 shadow-2xl z-50 divide-y divide-zinc-800 text-xs">
+                  <div className="glass-panel absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-60 rounded-2xl p-2.5 shadow-2xl z-50 divide-y divide-white/[0.08] text-xs">
                     <div className="px-3 py-2">
                       <p className="font-bold text-white truncate">{user.displayName}</p>
                       <p className="text-zinc-400 text-[11px] font-mono truncate">@{user.username}</p>
@@ -235,11 +237,11 @@ export function Navbar({
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-1.5 flex-shrink-0">
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => (onOpenAuth || openAuthModal)('login')}
-                  className="flex items-center space-x-1 h-9 px-2.5 sm:px-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs sm:text-sm font-semibold whitespace-nowrap flex-shrink-0 transition"
+                  className="btn-glass flex items-center space-x-1.5 h-9 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <LogIn className="w-3.5 h-3.5 text-blue-400" />
                   <span>Sign In</span>
@@ -247,10 +249,10 @@ export function Navbar({
                 <button
                   type="button"
                   onClick={() => (onOpenAuth || openAuthModal)('register')}
-                  className="flex items-center space-x-1 h-9 px-2.5 sm:px-3 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap flex-shrink-0 transition"
+                  className="btn-glow-accent flex items-center space-x-1.5 h-9 px-3.5 rounded-full text-xs font-black shadow-md whitespace-nowrap flex-shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
-                  <span>Register</span>
+                  <span>Register Free</span>
                 </button>
               </div>
             )}
@@ -261,12 +263,12 @@ export function Navbar({
             type="button"
             onClick={onOpenAccessibility}
             aria-label={`Accessibility Center. Currently in ${settings.preset} mode.`}
-            className="flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse h-9 px-2.5 sm:px-3 rounded-xl border-2 border-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-yellow-400 transition"
+            className="flex items-center space-x-1.5 rtl:space-x-reverse h-9 px-3 rounded-full border-2 border-yellow-400 bg-yellow-400/15 hover:bg-yellow-400/25 text-yellow-300 text-xs sm:text-sm font-bold shadow-md shadow-yellow-400/10 whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-yellow-400 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Sliders className="w-3.5 h-3.5 text-yellow-400 stroke-[2.5] flex-shrink-0" />
             <span className="hidden xl:inline whitespace-nowrap">{t('accessibilityCenter')}</span>
             <span className="hidden sm:inline xl:hidden whitespace-nowrap">A11Y</span>
-            <span className="px-1.5 py-0.5 rounded bg-yellow-400 text-black text-[10px] font-black uppercase whitespace-nowrap flex-shrink-0">
+            <span className="px-2 py-0.5 rounded-full bg-yellow-400 text-black text-[10px] font-black uppercase whitespace-nowrap flex-shrink-0">
               {settings.preset === 'DEFAULT' ? 'Preset' : settings.preset.split('_')[0]}
             </span>
           </button>
@@ -277,9 +279,9 @@ export function Navbar({
               type="button"
               onClick={onCreateRoom}
               aria-label={settings.simpleLanguageMode ? 'Create New Voice Room' : t('createRoom')}
-              className="hidden sm:flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/30 whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-blue-400 transition"
+              className="btn-glow-primary hidden sm:flex items-center space-x-1.5 rtl:space-x-reverse h-9 px-4 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap flex-shrink-0 focus:ring-4 focus:ring-blue-400 transition-all"
             >
-              <PlusCircle className="w-3.5 h-3.5 stroke-[2.5] flex-shrink-0" />
+              <PlusCircle className="w-4 h-4 stroke-[2.5] flex-shrink-0" />
               <span className="hidden md:inline whitespace-nowrap">
                 {settings.simpleLanguageMode ? 'Start Room' : 'Create Room'}
               </span>

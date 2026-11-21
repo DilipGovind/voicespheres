@@ -128,23 +128,23 @@ export function CreateRoomModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl overflow-y-auto animate-in fade-in duration-200"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-room-title"
-        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border-2 border-blue-500 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden"
+        className="glass-panel relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-white/10 text-zinc-100 shadow-2xl overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/90">
-          <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
-            <div className="p-2 rounded-xl bg-blue-600 text-white">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/[0.08] bg-zinc-900/60">
+          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 border border-white/10">
               <PlusCircle className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
               <h2 id="create-room-title" className="text-xl font-black text-white">
-                Create Inclusive Voice Room
+                Create Inclusive Voice Space
               </h2>
               <p className="text-xs text-zinc-400">
                 Design an accessible, welcoming space for global community participation
@@ -317,19 +317,19 @@ export function CreateRoomModal({
           </div>
 
           {/* Footer Submit */}
-          <div className="flex items-center justify-end space-x-2 pt-2 border-t border-zinc-800">
+          <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-white/[0.08]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-sm font-semibold"
+              className="btn-glass px-4.5 py-2.5 rounded-2xl text-zinc-300 hover:text-white text-sm font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition"
+              className="btn-glow-primary px-6 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg shadow-indigo-600/30"
             >
-              Launch Room
+              Launch Space
             </button>
           </div>
         </form>

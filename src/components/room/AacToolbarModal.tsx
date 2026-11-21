@@ -224,18 +224,18 @@ export function AacToolbarModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto animate-in fade-in duration-200"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="aac-toolkit-title"
-        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border-2 border-emerald-400 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden"
+        className="glass-panel relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-white/10 text-zinc-100 shadow-2xl overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/90">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/[0.08] bg-zinc-900/60">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="p-2.5 rounded-2xl bg-emerald-500 text-black shadow-md shadow-emerald-500/20">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 text-black shadow-md shadow-emerald-500/30">
               <MessageSquare className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>

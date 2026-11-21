@@ -83,9 +83,9 @@ export function ControlsBar({
     <nav
       role="toolbar"
       aria-label="Room Controls Toolbar"
-      className="sticky bottom-0 z-30 w-full border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-md py-3 px-4 sm:px-6"
+      className="sticky bottom-0 z-30 w-full p-2.5 sm:p-4 pointer-events-none"
     >
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div className="glass-dock max-w-5xl mx-auto rounded-3xl p-2.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-between gap-2.5 pointer-events-auto border border-white/10 shadow-2xl">
         {/* Left: Audio & Voice Controls */}
         <div className="flex items-center space-x-2 rtl:space-x-reverse flex-wrap">
           {/* Mic Toggle (Only if speaker or host) */}
@@ -94,13 +94,13 @@ export function ControlsBar({
               type="button"
               onClick={onToggleMute}
               aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
-              className={`flex items-center space-x-2 rtl:space-x-reverse px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md transition ${
+              className={`flex items-center space-x-2 rtl:space-x-reverse px-4.5 py-2.5 rounded-full font-black text-xs sm:text-sm shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] ${
                 isMuted
-                  ? 'bg-red-600 hover:bg-red-500 text-white border-2 border-red-400'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-400'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border border-red-400/50 shadow-red-500/20'
+                  : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-black border border-emerald-300/60 shadow-emerald-500/30'
               }`}
             >
-              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 animate-pulse" />}
+              {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 animate-pulse" />}
               <span>{isMuted ? 'Muted' : 'Speaking'}</span>
             </button>
           )}
@@ -133,10 +133,10 @@ export function ControlsBar({
                   ? 'Mic Monitor Active: You are hearing yourself'
                   : 'Mic Check: Hear your own voice in headphones'
               }
-              className={`flex items-center space-x-1.5 px-3 py-2.5 rounded-2xl font-bold text-xs border-2 transition ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2.5 rounded-full font-bold text-xs border transition-all ${
                 isMonitoringSelf
-                  ? 'bg-blue-600 text-white border-blue-400 shadow-md ring-2 ring-blue-400/50'
-                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+                  ? 'bg-blue-600 text-white border-blue-400 shadow-md ring-2 ring-blue-400/40'
+                  : 'btn-glass text-zinc-300'
               }`}
             >
               <Volume2 className="w-4 h-4" />
@@ -149,13 +149,13 @@ export function ControlsBar({
             type="button"
             onClick={onToggleHand}
             aria-label={isHandRaised ? 'Lower hand' : 'Raise hand to speak'}
-            className={`flex items-center space-x-2 rtl:space-x-reverse px-3.5 py-2.5 rounded-2xl font-bold text-sm border-2 transition ${
+            className={`flex items-center space-x-2 rtl:space-x-reverse px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm border transition-all ${
               isHandRaised
-                ? 'bg-amber-400 text-black border-amber-300 shadow-lg shadow-amber-400/20'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700'
+                ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black border-amber-300 shadow-lg shadow-amber-400/25 ring-2 ring-amber-400/30'
+                : 'btn-glass text-zinc-200'
             }`}
           >
-            <Hand className="w-5 h-5" />
+            <Hand className="w-4 h-4" />
             <span className="hidden sm:inline">{isHandRaised ? 'Lower Hand' : 'Raise Hand'}</span>
           </button>
 
@@ -164,13 +164,13 @@ export function ControlsBar({
             type="button"
             onClick={onToggleAAC}
             aria-label="Open AAC Augmentative Communication and Type-to-Speak toolkit"
-            className={`flex items-center space-x-2 rtl:space-x-reverse px-3.5 py-2.5 rounded-2xl font-bold text-sm border-2 transition ${
+            className={`flex items-center space-x-2 rtl:space-x-reverse px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm border transition-all ${
               aacOpen
-                ? 'bg-emerald-500 text-black border-emerald-300'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border-emerald-500/50'
+                ? 'bg-emerald-400 text-black border-emerald-300 shadow-lg'
+                : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-emerald-500/30'
             }`}
           >
-            <MessageSquare className="w-5 h-5" />
+            <MessageSquare className="w-4 h-4" />
             <span className="hidden sm:inline">AAC Speak</span>
           </button>
         </div>
@@ -183,13 +183,13 @@ export function ControlsBar({
             onClick={onToggleCaptions}
             aria-label={captionsOpen ? 'Hide live captions' : 'Show live captions'}
             aria-pressed={captionsOpen}
-            className={`flex items-center space-x-2 rtl:space-x-reverse px-3.5 py-2.5 rounded-2xl font-bold text-sm border-2 transition ${
+            className={`flex items-center space-x-2 rtl:space-x-reverse px-3.5 py-2.5 rounded-full font-bold text-xs sm:text-sm border transition-all ${
               captionsOpen
-                ? 'bg-cyan-500 text-black border-cyan-300 shadow-md'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+                ? 'bg-cyan-500 text-black border-cyan-300 shadow-md shadow-cyan-500/20'
+                : 'btn-glass text-zinc-300'
             }`}
           >
-            <Subtitles className="w-5 h-5" />
+            <Subtitles className="w-4 h-4" />
             <span className="hidden md:inline">Captions</span>
           </button>
 
@@ -199,13 +199,13 @@ export function ControlsBar({
             onClick={onToggleChat}
             aria-label={chatOpen ? 'Hide text chat' : 'Show text chat'}
             aria-pressed={chatOpen}
-            className={`flex items-center space-x-2 rtl:space-x-reverse px-3.5 py-2.5 rounded-2xl font-bold text-sm border-2 transition ${
+            className={`flex items-center space-x-2 rtl:space-x-reverse px-3.5 py-2.5 rounded-full font-bold text-xs sm:text-sm border transition-all ${
               chatOpen
-                ? 'bg-blue-600 text-white border-blue-400 shadow-md'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+                ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20'
+                : 'btn-glass text-zinc-300'
             }`}
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-4 h-4" />
             <span className="hidden md:inline">Chat</span>
           </button>
 
@@ -224,13 +224,13 @@ export function ControlsBar({
                   ? 'AI Voice Companion Active'
                   : 'Optional AI Voice Companion (Disabled by default)'
               }
-              className={`p-2.5 rounded-2xl border-2 transition ${
+              className={`p-2.5 rounded-full border transition-all ${
                 isAiEnabled
                   ? 'bg-purple-600 text-white border-purple-400 shadow-md'
-                  : 'bg-zinc-900 hover:bg-zinc-800 text-purple-400 border-zinc-700'
+                  : 'btn-glass text-purple-300'
               }`}
             >
-              <Bot className="w-5 h-5" />
+              <Bot className="w-4 h-4" />
             </button>
           )}
 
@@ -241,9 +241,9 @@ export function ControlsBar({
               onClick={onOpenFeedback}
               aria-label="Share Community Feedback"
               title="Share Feedback & Ideas"
-              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-yellow-400 border border-zinc-700 hover:border-yellow-400/50 transition"
+              className="btn-glass p-2.5 rounded-full text-yellow-400"
             >
-              <MessageSquareHeart className="w-5 h-5" />
+              <MessageSquareHeart className="w-4 h-4" />
             </button>
           )}
 
@@ -254,9 +254,9 @@ export function ControlsBar({
               onClick={onOpenHostControls}
               aria-label="Open Host Administration Controls"
               title="Room Host Controls"
-              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-amber-400 border-2 border-amber-500/50 transition"
+              className="btn-glass p-2.5 rounded-full text-amber-400 border-amber-500/40"
             >
-              <ShieldCheck className="w-5 h-5" />
+              <ShieldCheck className="w-4 h-4" />
             </button>
           )}
 
@@ -266,9 +266,9 @@ export function ControlsBar({
               type="button"
               onClick={onShareRoom}
               aria-label="Share room invite link"
-              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-yellow-400 border border-zinc-700 hover:border-yellow-400/50 transition"
+              className="btn-glass p-2.5 rounded-full text-zinc-300 hover:text-yellow-400"
             >
-              <Share2 className="w-5 h-5" />
+              <Share2 className="w-4 h-4" />
             </button>
           )}
 
@@ -279,9 +279,9 @@ export function ControlsBar({
               onClick={onPlayTestChime}
               aria-label="Play test audio tone to verify speakers"
               title="Test Sound: Play 3-tone chime to test speakers"
-              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-zinc-700 hover:border-cyan-400/50 transition"
+              className="btn-glass p-2.5 rounded-full text-cyan-400 hover:text-cyan-300"
             >
-              <Volume2 className="w-5 h-5" />
+              <Volume2 className="w-4 h-4" />
             </button>
           )}
 
@@ -290,9 +290,9 @@ export function ControlsBar({
             type="button"
             onClick={onOpenAccessibility}
             aria-label="Open Universal Accessibility Center"
-            className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-yellow-400 border-2 border-yellow-400/60 transition"
+            className="p-2.5 rounded-full border border-yellow-400/40 bg-yellow-400/10 text-yellow-300 hover:bg-yellow-400/20 transition-all"
           >
-            <Sliders className="w-5 h-5 stroke-[2.5]" />
+            <Sliders className="w-4 h-4 stroke-[2.5]" />
           </button>
 
           {/* Report Abuse / Anti-Ableism */}
@@ -300,9 +300,9 @@ export function ControlsBar({
             type="button"
             onClick={onOpenReport}
             aria-label="Report harassment or ableist behavior"
-            className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-red-400 border border-zinc-700 transition"
+            className="btn-glass p-2.5 rounded-full text-zinc-400 hover:text-red-400"
           >
-            <ShieldAlert className="w-5 h-5" />
+            <ShieldAlert className="w-4 h-4" />
           </button>
         </div>
 
@@ -312,7 +312,7 @@ export function ControlsBar({
             type="button"
             onClick={onLeaveRoom}
             aria-label="Leave this room"
-            className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2.5 rounded-2xl bg-zinc-900 hover:bg-red-950 text-zinc-300 hover:text-red-300 border-2 border-zinc-700 hover:border-red-500 font-bold text-sm transition"
+            className="btn-danger-glass flex items-center space-x-2 rtl:space-x-reverse px-4.5 py-2.5 rounded-full font-bold text-xs sm:text-sm"
           >
             <LogOut className="w-4 h-4" />
             <span>Leave</span>

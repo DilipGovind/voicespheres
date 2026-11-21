@@ -16,35 +16,37 @@ export function Footer() {
   }
 
   return (
-    <footer className="w-full border-t border-zinc-800 bg-zinc-950/90 py-8 px-4 sm:px-6 mt-auto">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+    <footer className="w-full border-t border-white/[0.08] bg-zinc-950/90 backdrop-blur-xl py-8 px-4 sm:px-6 mt-auto">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5 text-xs text-zinc-400">
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
-            <Radio className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 border border-white/10">
+            <Radio className="w-4 h-4 animate-pulse" />
           </div>
           <div>
-            <div className="font-bold text-white text-sm">VoiceSphere</div>
+            <div className="font-extrabold text-white text-sm tracking-tight">VoiceSphere 2.0</div>
             <p className="text-[11px] text-zinc-400">
               Free, Open-Source & Privacy-First Global Audio Community
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 text-zinc-400">
-          <span className="flex items-center space-x-1 text-emerald-400">
-            <ShieldCheck className="w-4 h-4" />
+        <div className="flex flex-wrap items-center justify-center gap-3 text-zinc-300">
+          <span className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold">
+            <ShieldCheck className="w-3.5 h-3.5" />
             <span>Zero Tracking & No Audio Sale</span>
           </span>
 
-          <span className="flex items-center space-x-1 text-yellow-400">
-            <Award className="w-4 h-4" />
-            <span>WCAG 2.2 AA / AAA Compliant</span>
+          <span className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/20 font-bold">
+            <Award className="w-3.5 h-3.5" />
+            <span>WCAG 2.2 AAA Compliant</span>
           </span>
 
-          <span>Licensed under AGPL-3.0</span>
+          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 font-mono text-[11px]">
+            AGPL-3.0 Open Architecture
+          </span>
         </div>
 
-        <div className="text-zinc-400 text-center md:text-right">
+        <div className="text-zinc-400 text-center md:text-right max-w-xs font-normal text-[11px] leading-relaxed">
           "Every person deserves a voice, whether expressed through speech, text, technology, or assistive communication."
         </div>
       </div>
