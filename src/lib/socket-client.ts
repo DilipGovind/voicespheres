@@ -26,6 +26,8 @@ class RealtimeClient {
   private seenMessageIds: Set<string> = new Set();
   private lastKnownCaptionsCount = 0;
   private lastKnownChatCount = 0;
+  private lastSignalSyncTimestamp = 0;
+  private seenSignalIds: Set<string> = new Set();
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -170,21 +172,44 @@ class RealtimeClient {
     if (!this.roomId || !this.currentUser) return;
 
     try {
-      // 1. Send heartbeat
+      // 1. Send heartbeat & retrieve updates
       const postRes = await fetch('/api/rooms/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           roomId: this.roomId,
+          userId: this.currentUser.id,
           user: this.currentUser,
           action: 'heartbeat',
+          since: this.lastSignalSyncTimestamp,
         }),
       });
 
       if (!postRes.ok) return;
       const syncData = await postRes.json();
+      if (syncData?.timestamp) {
+        this.lastSignalSyncTimestamp = syncData.timestamp;
+      }
 
-      // 2. Sync remote participants
+      // 2. Sync incoming WebRTC signals from remote peers across devices
+      if (syncData?.pendingSignals && Array.isArray(syncData.pendingSignals)) {
+        for (const sig of syncData.pendingSignals) {
+          if (!this.seenSignalIds.has(sig.id)) {
+            this.seenSignalIds.add(sig.id);
+            if (this.seenSignalIds.size > 200) {
+              const first = this.seenSignalIds.values().next().value;
+              if (first) this.seenSignalIds.delete(first);
+            }
+            this.trigger('webrtc:signal', {
+              senderUserId: sig.senderUserId,
+              targetUserId: sig.targetUserId,
+              signal: sig.signal,
+            });
+          }
+        }
+      }
+
+      // 3. Sync remote participants
       if (syncData?.participants && Array.isArray(syncData.participants)) {
         for (const remoteP of syncData.participants) {
           if (remoteP.id !== this.currentUser.id) {
@@ -193,7 +218,7 @@ class RealtimeClient {
         }
       }
 
-      // 3. Sync recent captions
+      // 4. Sync recent captions
       if (syncData?.recentCaptions && Array.isArray(syncData.recentCaptions)) {
         const count = syncData.recentCaptions.length;
         if (count > this.lastKnownCaptionsCount) {
@@ -207,7 +232,7 @@ class RealtimeClient {
         }
       }
 
-      // 4. Sync recent chat messages
+      // 5. Sync recent chat messages
       if (syncData?.recentChat && Array.isArray(syncData.recentChat)) {
         const count = syncData.recentChat.length;
         if (count > this.lastKnownChatCount) {

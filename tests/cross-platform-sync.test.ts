@@ -102,4 +102,23 @@ describe('Cross-Platform Real-Time Sync & Multi-Device Presence', () => {
     // Silent stream should not throw
     webRTCManager.stopLocalStream();
   });
+
+  it('supports audio test chime, loopback monitoring, and audio unlocker', async () => {
+    // Should execute without throwing in mock node/DOM environment
+    expect(() => webRTCManager.playTestChime()).not.toThrow();
+
+    const monitorState = webRTCManager.toggleMicMonitoring(false);
+    expect(monitorState).toBe(false);
+    expect(webRTCManager.getIsMonitoring()).toBe(false);
+
+    let blockedNotified = false;
+    const unsub = webRTCManager.onAutoplayBlockedChange((b) => {
+      blockedNotified = true;
+    });
+    expect(blockedNotified).toBe(true);
+    unsub();
+
+    const unlocked = await webRTCManager.unlockAudio();
+    expect(unlocked).toBe(true);
+  });
 });

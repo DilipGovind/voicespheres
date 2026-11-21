@@ -37,6 +37,8 @@ import {
   Share2,
   ShieldCheck,
   Bot,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface VoiceRoomViewProps {
@@ -81,6 +83,8 @@ export function VoiceRoomView({
   const [voiceServerUrl, setVoiceServerUrl] = useState<string>('');
   const [connectionErrorMsg, setConnectionErrorMsg] = useState<string | undefined>();
   const [isMicBlocked, setIsMicBlocked] = useState(false);
+  const [isAudioBlocked, setIsAudioBlocked] = useState(false);
+  const [isMicMonitoring, setIsMicMonitoring] = useState(false);
 
   // AI Voice Companion state
   const [aiCompanionEnabled, setAiCompanionEnabled] = useState(false);
@@ -217,6 +221,33 @@ export function VoiceRoomView({
     // Connect to cross-device cloud mesh and start presence heartbeats
     realtimeClient.joinRoom(room.id, currentUser);
 
+    // 1. Wire up WebRTC signaling sender
+    webRTCManager.setSignalSender((targetUserId, signal) => {
+      realtimeClient.sendSignal(targetUserId, signal);
+    });
+
+    // 2. Listen to incoming WebRTC signals from remote peers across devices
+    const unsubSignal = realtimeClient.on(
+      'webrtc:signal',
+      (data: { senderUserId: string; targetUserId: string; signal: any }) => {
+        if (data && data.targetUserId === currentUserId && data.senderUserId !== currentUserId) {
+          webRTCManager.handleIncomingSignal(data.senderUserId, data.signal);
+        }
+      }
+    );
+
+    // 3. Listen to browser audio autoplay policy status
+    const unsubAutoplay = webRTCManager.onAutoplayBlockedChange((blocked) => {
+      setIsAudioBlocked(blocked);
+    });
+
+    // 4. Connect WebRTC peer audio to all existing participants in the room
+    (room.participants || []).forEach((p) => {
+      if (p.id !== currentUserId) {
+        webRTCManager.connectPeer(currentUserId, p.id);
+      }
+    });
+
     // Initialize voice connection
     initializeVoiceConnection();
 
@@ -273,6 +304,7 @@ export function VoiceRoomView({
 
     const unsubHeartbeat = realtimeClient.on('presence:heartbeat', (data: { user: Participant }) => {
       if (data?.user && data.user.id !== currentUserId) {
+        webRTCManager.connectPeer(currentUserId, data.user.id);
         setParticipants((prev) => {
           const idx = prev.findIndex((p) => p.id === data.user.id);
           if (idx === -1) {
@@ -373,6 +405,8 @@ export function VoiceRoomView({
       realtimeClient.leaveRoom(room.id, currentUserId);
       unsubJoin();
       unsubHeartbeat();
+      unsubSignal();
+      unsubAutoplay();
       unsubLeave();
       unsubMute();
       unsubSpeaking();
@@ -449,6 +483,15 @@ export function VoiceRoomView({
       captionEngineRef.current.pushManualCaption(text, true);
     }
 
+    // Immediately vocalize locally so the speaker hears their own synthesized voice
+    if (!settings.quietMode) {
+      const engine = AACSpeechEngine.getInstance();
+      engine.speak(text, {
+        rate: settings.aacSpeed,
+        pitch: settings.aacPitch,
+      });
+    }
+
     const chatMsg: ChatMessageItem = {
       id: Math.random().toString(36).substring(2, 9),
       senderId: currentUserId,
@@ -461,6 +504,31 @@ export function VoiceRoomView({
     setChatMessages((prev) => [...prev, chatMsg]);
     realtimeClient.sendChatMessage(chatMsg);
     announce(`You spoke via AAC: ${text}`, 'polite');
+  };
+
+  // Local loopback monitor ("Hear Myself / Mic Check")
+  const handleToggleMicMonitoring = () => {
+    const next = webRTCManager.toggleMicMonitoring();
+    setIsMicMonitoring(next);
+    announce(
+      next
+        ? 'Microphone monitor active. You can now hear your own voice in headphones.'
+        : 'Microphone monitor disabled.',
+      'polite'
+    );
+  };
+
+  // Play audible test chime for speakers/headphones verification
+  const handlePlayTestChime = () => {
+    webRTCManager.playTestChime();
+    announce('Playing test audio chime', 'polite');
+  };
+
+  // User-gesture audio unlocker for browser autoplay policies
+  const handleUnlockAudio = async () => {
+    await webRTCManager.unlockAudio();
+    setIsAudioBlocked(false);
+    announce('Room audio enabled and active', 'polite');
   };
 
   // Participant Speech & Captions Simulation (Disabled in Production)
@@ -718,6 +786,47 @@ export function VoiceRoomView({
         </div>
       </div>
 
+      {/* Audio Autoplay Unblock Banner */}
+      {isAudioBlocked && (
+        <div
+          role="alert"
+          className="bg-gradient-to-r from-amber-950 via-zinc-900 to-amber-950 border-b-2 border-amber-500 py-3 px-4 sm:px-6 shadow-xl"
+        >
+          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center space-x-2.5">
+              <span className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+                <Volume2 className="w-5 h-5 animate-pulse" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-amber-200">
+                  Browser Paused Room Audio
+                </p>
+                <p className="text-xs text-amber-300/80">
+                  Click the button below to enable speaker audio and listen to room voices.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={handlePlayTestChime}
+                className="px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs"
+              >
+                Test Chime
+              </button>
+              <button
+                type="button"
+                onClick={handleUnlockAudio}
+                className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs shadow-lg transition active:scale-95 flex items-center space-x-1.5"
+              >
+                <Volume2 className="w-4 h-4" />
+                <span>Tap to Enable Room Audio</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Room Body */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
         {/* Room Notification / Toast */}
@@ -804,6 +913,8 @@ export function VoiceRoomView({
         isSpeaker={isSpeaker}
         isHost={isHost}
         isAiEnabled={aiCompanionEnabled}
+        isAudioBlocked={isAudioBlocked}
+        isMonitoringSelf={isMicMonitoring}
         onToggleMute={handleToggleMute}
         onToggleHand={handleToggleHand}
         onToggleCaptions={() => setCaptionsOpen(!captionsOpen)}
@@ -815,6 +926,9 @@ export function VoiceRoomView({
         onToggleAiCompanion={handleToggleAiCompanion}
         onOpenFeedback={() => setFeedbackOpen(true)}
         onShareRoom={() => setShareOpen(true)}
+        onUnlockAudio={handleUnlockAudio}
+        onToggleMicMonitoring={handleToggleMicMonitoring}
+        onPlayTestChime={handlePlayTestChime}
         onLeaveRoom={onLeaveRoom}
       />
 

@@ -2,10 +2,15 @@ export class WebRTCManager {
   private localStream: MediaStream | null = null;
   private peerConnections: Map<string, RTCPeerConnection> = new Map();
   private remoteAudioElements: Map<string, HTMLAudioElement> = new Map();
+  private remoteAudioSources: Map<string, MediaStreamAudioSourceNode> = new Map();
   private pendingCandidates: Map<string, RTCIceCandidateInit[]> = new Map();
   private isMuted = false;
   private audioDestination: MediaStreamAudioDestinationNode | null = null;
   private audioContext: AudioContext | null = null;
+  private micMonitorGain: GainNode | null = null;
+  private isMonitoring = false;
+  private isAudioBlocked = false;
+  private autoplayBlockedListeners: Set<(blocked: boolean) => void> = new Set();
   private signalSender: ((targetUserId: string, signal: any) => void) | null = null;
 
   // Multi-tier ICE Configuration with Google STUN + OpenRelay TURN for Carrier-Grade Cellular NAT traversal
@@ -38,6 +43,126 @@ export class WebRTCManager {
 
   public setSignalSender(sender: (targetUserId: string, signal: any) => void) {
     this.signalSender = sender;
+  }
+
+  public onAutoplayBlockedChange(listener: (blocked: boolean) => void) {
+    this.autoplayBlockedListeners.add(listener);
+    listener(this.isAudioBlocked);
+    return () => this.autoplayBlockedListeners.delete(listener);
+  }
+
+  private notifyAutoplayBlocked(blocked: boolean) {
+    this.isAudioBlocked = blocked;
+    this.autoplayBlockedListeners.forEach((l) => {
+      try {
+        l(blocked);
+      } catch {}
+    });
+  }
+
+  public getIsAudioBlocked(): boolean {
+    return this.isAudioBlocked;
+  }
+
+  /**
+   * Unmute and resume all audio output (satisfies browser Autoplay Policies).
+   */
+  public async unlockAudio(): Promise<boolean> {
+    try {
+      this.unlockMobileAudio();
+      this.remoteAudioElements.forEach(async (audioEl, id) => {
+        try {
+          audioEl.muted = false;
+          await audioEl.play();
+        } catch (e) {
+          console.warn('[WebRTCManager] Failed to resume audio element for', id, e);
+        }
+      });
+      this.notifyAutoplayBlocked(false);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Local microphone monitor loopback for testing ("Hear Myself / Mic Check").
+   */
+  public toggleMicMonitoring(enable?: boolean): boolean {
+    if (typeof window === 'undefined') return false;
+    const nextState = enable !== undefined ? enable : !this.isMonitoring;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return false;
+
+      if (!this.audioContext) {
+        this.audioContext = new AudioCtx();
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume().catch(() => {});
+      }
+
+      if (nextState) {
+        if (!this.localStream) return false;
+        if (!this.micMonitorGain) {
+          const micSource = this.audioContext.createMediaStreamSource(this.localStream);
+          this.micMonitorGain = this.audioContext.createGain();
+          this.micMonitorGain.gain.value = 0.9;
+          micSource.connect(this.micMonitorGain);
+          this.micMonitorGain.connect(this.audioContext.destination);
+        } else {
+          this.micMonitorGain.gain.value = 0.9;
+        }
+        this.isMonitoring = true;
+      } else {
+        if (this.micMonitorGain) {
+          this.micMonitorGain.gain.value = 0;
+        }
+        this.isMonitoring = false;
+      }
+    } catch (e) {
+      console.warn('[WebRTCManager] Error toggling mic monitoring:', e);
+      this.isMonitoring = false;
+    }
+    return this.isMonitoring;
+  }
+
+  public getIsMonitoring(): boolean {
+    return this.isMonitoring;
+  }
+
+  /**
+   * Play an immediate audible test chime to verify speakers and device volume.
+   */
+  public playTestChime() {
+    if (typeof window === 'undefined') return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!this.audioContext) {
+        this.audioContext = new AudioCtx();
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume().catch(() => {});
+      }
+      const ctx = this.audioContext;
+      const now = ctx.currentTime;
+      // 3 ascending harmonic notes: C5 (523.25Hz), E5 (659.25Hz), G5 (783.99Hz)
+      [523.25, 659.25, 783.99].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+        gain.gain.setValueAtTime(0.25, now + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.32);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.32);
+      });
+    } catch (e) {
+      console.warn('[WebRTCManager] Could not play test chime:', e);
+    }
   }
 
   public async acquireMicrophone(): Promise<MediaStream | null> {
@@ -146,11 +271,16 @@ export class WebRTCManager {
       this.peerConnections.set(remoteUserId, pc);
 
       // Add local audio tracks if microphone is already active
-      if (this.localStream) {
+      if (this.localStream && this.localStream.getAudioTracks().length > 0) {
         this.localStream.getAudioTracks().forEach((track) => {
           track.enabled = !this.isMuted;
           pc.addTrack(track, this.localStream!);
         });
+      } else {
+        // Unified Plan audio transceiver allows receiving audio even if mic is unattached/muted
+        try {
+          pc.addTransceiver('audio', { direction: 'recvonly' });
+        } catch {}
       }
 
       // Handle incoming remote audio stream
@@ -209,11 +339,15 @@ export class WebRTCManager {
           pc = new RTCPeerConnection(this.rtcConfig);
           this.peerConnections.set(senderUserId, pc);
 
-          if (this.localStream) {
+          if (this.localStream && this.localStream.getAudioTracks().length > 0) {
             this.localStream.getAudioTracks().forEach((track) => {
               track.enabled = !this.isMuted;
               pc!.addTrack(track, this.localStream!);
             });
+          } else {
+            try {
+              pc!.addTransceiver('audio', { direction: 'recvonly' });
+            } catch {}
           }
 
           pc.ontrack = (event) => {
@@ -303,7 +437,7 @@ export class WebRTCManager {
   private attachRemoteAudio(remoteUserId: string, stream: MediaStream) {
     if (typeof window === 'undefined') return;
 
-    // 1. Web Audio API Stream Routing
+    // 1. Web Audio API Stream Routing with garbage-collection protection
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtx) {
@@ -313,40 +447,64 @@ export class WebRTCManager {
         if (this.audioContext.state === 'suspended') {
           this.audioContext.resume().catch(() => {});
         }
+        const existingSource = this.remoteAudioSources.get(remoteUserId);
+        if (existingSource) {
+          try {
+            existingSource.disconnect();
+          } catch {}
+        }
         const source = this.audioContext.createMediaStreamSource(stream);
         source.connect(this.audioContext.destination);
+        this.remoteAudioSources.set(remoteUserId, source);
       }
     } catch (err) {
-      console.warn('Web Audio stream routing note:', err);
+      console.warn('[WebRTCManager] Web Audio stream routing note:', err);
     }
 
-    // 2. HTML5 Audio Element with PlaysInline and User Unlock
+    // 2. HTML5 Audio Element with PlaysInline and Autoplay policy detection
     if (typeof document !== 'undefined') {
       let audioEl = this.remoteAudioElements.get(remoteUserId);
       if (!audioEl) {
         audioEl = document.createElement('audio');
+        audioEl.id = `remote-audio-${remoteUserId}`;
         audioEl.autoplay = true;
         (audioEl as any).playsInline = true;
-        audioEl.style.display = 'none';
+        audioEl.setAttribute('playsinline', 'true');
+        audioEl.setAttribute('webkit-playsinline', 'true');
+        audioEl.setAttribute('autoplay', 'true');
+        // Hidden from visual flow without breaking iOS/WebKit audio decode
+        audioEl.style.position = 'fixed';
+        audioEl.style.top = '-9999px';
+        audioEl.style.left = '-9999px';
+        audioEl.style.width = '1px';
+        audioEl.style.height = '1px';
+        audioEl.style.opacity = '0.001';
+        audioEl.style.pointerEvents = 'none';
         document.body.appendChild(audioEl);
         this.remoteAudioElements.set(remoteUserId, audioEl);
       }
 
       audioEl.srcObject = stream;
+      audioEl.muted = false;
       audioEl.volume = 1.0;
-      audioEl.play().catch(() => {
-        // Queue playback unlock on next user touch or click
-        const unlock = () => {
-          if (audioEl) audioEl.play().catch(() => {});
-          if (this.audioContext && this.audioContext.state === 'suspended') {
-            this.audioContext.resume().catch(() => {});
-          }
-          window.removeEventListener('click', unlock);
-          window.removeEventListener('touchstart', unlock);
-        };
-        window.addEventListener('click', unlock, { once: true });
-        window.addEventListener('touchstart', unlock, { once: true });
-      });
+
+      const playPromise = audioEl.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('[WebRTCManager] Browser autoplay blocked for peer:', remoteUserId, err);
+          this.notifyAutoplayBlocked(true);
+
+          const unlock = () => {
+            this.unlockAudio();
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('touchstart', unlock);
+            window.removeEventListener('keydown', unlock);
+          };
+          window.addEventListener('click', unlock, { once: true });
+          window.addEventListener('touchstart', unlock, { once: true });
+          window.addEventListener('keydown', unlock, { once: true });
+        });
+      }
     }
   }
 
@@ -358,6 +516,14 @@ export class WebRTCManager {
     }
 
     this.pendingCandidates.delete(remoteUserId);
+
+    const source = this.remoteAudioSources.get(remoteUserId);
+    if (source) {
+      try {
+        source.disconnect();
+      } catch {}
+      this.remoteAudioSources.delete(remoteUserId);
+    }
 
     const audioEl = this.remoteAudioElements.get(remoteUserId);
     if (audioEl) {
@@ -385,6 +551,21 @@ export class WebRTCManager {
     this.peerConnections.forEach((pc) => pc.close());
     this.peerConnections.clear();
     this.pendingCandidates.clear();
+
+    this.remoteAudioSources.forEach((src) => {
+      try {
+        src.disconnect();
+      } catch {}
+    });
+    this.remoteAudioSources.clear();
+
+    if (this.micMonitorGain) {
+      try {
+        this.micMonitorGain.disconnect();
+      } catch {}
+      this.micMonitorGain = null;
+    }
+    this.isMonitoring = false;
 
     this.remoteAudioElements.forEach((audioEl) => {
       audioEl.pause();

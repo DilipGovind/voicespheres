@@ -6,6 +6,7 @@ import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { Room } from '@/types/room';
 import { AudioMeter } from '@/lib/audio-meter';
 import { serializeRoomToUrl } from '@/lib/room-serializer';
+import { webRTCManager } from '@/lib/webrtc-manager';
 import {
   Mic,
   MicOff,
@@ -89,6 +90,11 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
     }
   };
 
+  const handleTestAudio = () => {
+    webRTCManager.playTestChime();
+    announce('Playing speaker test chime. If inaudible, please check your device volume.', 'polite');
+  };
+
   const handleJoin = () => {
     if (room.contentWarning?.enabled && !contentWarningAccepted) {
       announce('Please review the content warning before joining.', 'assertive');
@@ -117,6 +123,9 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
       announce('Room has reached maximum testing capacity.', 'assertive');
       return;
     }
+
+    // Unlock browser audio policy on user click
+    webRTCManager.unlockAudio();
 
     onConfirmJoin({ joinAsListener: joinAsListenerOnly, displayName, passcode: passcode.trim() });
   };
@@ -268,24 +277,35 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
             </div>
           </div>
 
-          {/* Mic Check & Listener-Only Mode */}
+          {/* Mic & Speaker Audio Check */}
           <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <span className="text-sm font-bold text-white block">Microphone Sound Check</span>
-                <span className="text-xs text-zinc-400">Optional: Test your mic volume before entering</span>
+                <span className="text-sm font-bold text-white block">Audio & Microphone Check</span>
+                <span className="text-xs text-zinc-400">Test speaker chime and mic volume before entering</span>
               </div>
-              <button
-                type="button"
-                onClick={handleTestMic}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
-                  micActive
-                    ? 'bg-emerald-500 text-black border-emerald-400'
-                    : 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:text-white'
-                }`}
-              >
-                {micActive ? 'Stop Mic Test' : 'Test Audio'}
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleTestAudio}
+                  title="Play 3-tone audio chime to test speaker volume"
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition flex items-center space-x-1"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Test Speakers</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTestMic}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                    micActive
+                      ? 'bg-emerald-500 text-black border-emerald-400'
+                      : 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:text-white'
+                  }`}
+                >
+                  {micActive ? 'Stop Mic' : 'Test Mic'}
+                </button>
+              </div>
             </div>
 
             {micActive && (

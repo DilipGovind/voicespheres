@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   Bot,
   MessageSquareHeart,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface ControlsBarProps {
@@ -28,6 +30,8 @@ interface ControlsBarProps {
   isSpeaker: boolean;
   isHost?: boolean;
   isAiEnabled?: boolean;
+  isAudioBlocked?: boolean;
+  isMonitoringSelf?: boolean;
   onToggleMute: () => void;
   onToggleHand: () => void;
   onToggleCaptions: () => void;
@@ -39,6 +43,9 @@ interface ControlsBarProps {
   onToggleAiCompanion?: () => void;
   onOpenFeedback?: () => void;
   onShareRoom?: () => void;
+  onUnlockAudio?: () => void;
+  onToggleMicMonitoring?: () => void;
+  onPlayTestChime?: () => void;
   onLeaveRoom: () => void;
 }
 
@@ -51,6 +58,8 @@ export function ControlsBar({
   isSpeaker,
   isHost,
   isAiEnabled,
+  isAudioBlocked,
+  isMonitoringSelf,
   onToggleMute,
   onToggleHand,
   onToggleCaptions,
@@ -62,6 +71,9 @@ export function ControlsBar({
   onToggleAiCompanion,
   onOpenFeedback,
   onShareRoom,
+  onUnlockAudio,
+  onToggleMicMonitoring,
+  onPlayTestChime,
   onLeaveRoom,
 }: ControlsBarProps) {
   const { settings, announce } = useAccessibility();
@@ -90,6 +102,45 @@ export function ControlsBar({
             >
               {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 animate-pulse" />}
               <span>{isMuted ? 'Muted' : 'Speaking'}</span>
+            </button>
+          )}
+
+          {/* Audio Unblock Trigger if browser blocked autoplay */}
+          {isAudioBlocked && onUnlockAudio && (
+            <button
+              type="button"
+              onClick={onUnlockAudio}
+              aria-label="Browser paused audio. Click to unmute room sound."
+              className="flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl bg-amber-400 text-black font-black text-xs shadow-lg animate-pulse border-2 border-amber-300 hover:bg-amber-300 transition"
+            >
+              <Volume2 className="w-4 h-4" />
+              <span>Enable Audio</span>
+            </button>
+          )}
+
+          {/* Mic Loopback Monitor ("Hear Myself") */}
+          {isSpeaker && onToggleMicMonitoring && (
+            <button
+              type="button"
+              onClick={onToggleMicMonitoring}
+              aria-label={
+                isMonitoringSelf
+                  ? 'Turn off mic monitor loopback'
+                  : 'Turn on mic monitor loopback to hear yourself'
+              }
+              title={
+                isMonitoringSelf
+                  ? 'Mic Monitor Active: You are hearing yourself'
+                  : 'Mic Check: Hear your own voice in headphones'
+              }
+              className={`flex items-center space-x-1.5 px-3 py-2.5 rounded-2xl font-bold text-xs border-2 transition ${
+                isMonitoringSelf
+                  ? 'bg-blue-600 text-white border-blue-400 shadow-md ring-2 ring-blue-400/50'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+              }`}
+            >
+              <Volume2 className="w-4 h-4" />
+              <span className="hidden sm:inline">{isMonitoringSelf ? 'Monitoring' : 'Hear Myself'}</span>
             </button>
           )}
 
@@ -218,6 +269,19 @@ export function ControlsBar({
               className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-yellow-400 border border-zinc-700 hover:border-yellow-400/50 transition"
             >
               <Share2 className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Speaker / Audio Output Test Chime */}
+          {onPlayTestChime && (
+            <button
+              type="button"
+              onClick={onPlayTestChime}
+              aria-label="Play test audio tone to verify speakers"
+              title="Test Sound: Play 3-tone chime to test speakers"
+              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-cyan-400 border border-zinc-700 hover:border-cyan-400/50 transition"
+            >
+              <Volume2 className="w-5 h-5" />
             </button>
           )}
 

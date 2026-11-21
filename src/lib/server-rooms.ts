@@ -1,10 +1,19 @@
 import { Room, Participant, LiveCaptionItem, ChatMessageItem, StructuredStage } from '@/types/room';
 import { INITIAL_COMMUNITY_ROOMS } from '@/lib/mock-rooms';
 
+export interface WebRTCSignalMessage {
+  id: string;
+  senderUserId: string;
+  targetUserId: string;
+  signal: any;
+  timestamp: number;
+}
+
 export interface RoomSyncState {
   participants: Map<string, Participant & { lastSeen: number }>;
   recentCaptions: LiveCaptionItem[];
   recentChat: ChatMessageItem[];
+  signals?: WebRTCSignalMessage[];
   currentStage?: StructuredStage;
   activeSpeakerId?: string | null;
   lastUpdated: number;
@@ -113,11 +122,58 @@ export function getOrCreateRoomSync(roomId: string): RoomSyncState {
       participants: new Map(),
       recentCaptions: [],
       recentChat: [],
+      signals: [],
       lastUpdated: Date.now(),
     };
     roomsSyncMap.set(roomId, state);
   }
+  if (!state.signals) {
+    state.signals = [];
+  }
   return state;
+}
+
+// Add WebRTC signaling message for cross-device peer discovery and connection
+export function addRoomSignal(
+  roomId: string,
+  senderUserId: string,
+  targetUserId: string,
+  signal: any
+): WebRTCSignalMessage {
+  const state = getOrCreateRoomSync(roomId);
+  state.lastUpdated = Date.now();
+  if (!state.signals) state.signals = [];
+
+  const msg: WebRTCSignalMessage = {
+    id: 'sig_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now(),
+    senderUserId,
+    targetUserId,
+    signal,
+    timestamp: Date.now(),
+  };
+
+  state.signals.push(msg);
+
+  // Keep last 100 signals and prune older than 45 seconds
+  const cutoff = Date.now() - 45000;
+  state.signals = state.signals.filter((s) => s.timestamp > cutoff).slice(-100);
+
+  return msg;
+}
+
+// Retrieve pending WebRTC signals addressed to a specific user
+export function getRoomSignalsForUser(
+  roomId: string,
+  targetUserId: string,
+  sinceTimestamp = 0
+): WebRTCSignalMessage[] {
+  const state = getOrCreateRoomSync(roomId);
+  if (!state.signals || state.signals.length === 0) return [];
+
+  const cutoff = Date.now() - 45000;
+  return state.signals.filter(
+    (s) => s.targetUserId === targetUserId && s.timestamp > sinceTimestamp && s.timestamp > cutoff
+  );
 }
 
 // Prune participants not seen in the last 25 seconds
