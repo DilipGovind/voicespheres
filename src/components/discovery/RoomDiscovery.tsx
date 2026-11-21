@@ -276,7 +276,7 @@ export function RoomDiscovery({
                 </div>
 
                 {/* Accessibility Feature Badges */}
-                <div className="flex flex-wrap gap-1.5 mb-5 mt-auto">
+                <div className="flex flex-wrap gap-1.5 mb-3 mt-auto">
                   {room.accessibilityFeatures.captionsAvailable && (
                     <span
                       title="Live Speech Captions Available"
@@ -312,15 +312,59 @@ export function RoomDiscovery({
                   </span>
                 </div>
 
+                {/* Recognized Members Presence Bar */}
+                {room.participants && room.participants.length > 0 && (
+                  <div className="mb-4 pt-2.5 border-t border-zinc-800/80">
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-2 font-medium">
+                      <span className="flex items-center space-x-1 text-zinc-300 font-semibold">
+                        <Users className="w-3.5 h-3.5 text-yellow-400" />
+                        <span>Recognized Members ({room.participants.length}):</span>
+                      </span>
+                      <span className="text-emerald-400 font-mono text-[10px] flex items-center space-x-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>{speakerCount} on mic</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {room.participants.slice(0, 4).map((p) => {
+                        const isHost = p.role === 'host';
+                        const isSpeaking = p.isSpeaking;
+                        return (
+                          <div
+                            key={p.id}
+                            title={`${p.name} (${p.role})${p.isSpeaking ? ' • Speaking' : ''}`}
+                            className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition ${
+                              isSpeaking
+                                ? 'bg-yellow-400/20 text-yellow-300 border-yellow-400/60 animate-pulse'
+                                : isHost
+                                ? 'bg-blue-500/15 text-blue-300 border-blue-500/40'
+                                : 'bg-zinc-800/90 text-zinc-300 border-zinc-700'
+                            }`}
+                          >
+                            <span className="text-[10px]">{p.avatar || '🎙️'}</span>
+                            <span className="truncate max-w-[85px]">{p.name}</span>
+                            {isHost && (
+                              <span className="text-[9px] text-blue-400 font-bold ml-0.5">Host</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {room.participants.length > 4 && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-mono border border-zinc-700">
+                          +{room.participants.length - 4} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Footer: Participants and Join Action */}
                 <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80">
                   <div className="flex items-center space-x-2 text-xs text-zinc-400">
-                    <Users className="w-4 h-4" />
-                    {!settings.hideParticipantCounts ? (
-                      <span>{room.participants.length} total ({speakerCount} on mic)</span>
-                    ) : (
-                      <span>Active Community</span>
-                    )}
+                    <span className="px-2 py-0.5 rounded-md bg-zinc-800 border border-zinc-700/80 text-[11px] text-zinc-300 font-medium">
+                      Direct Website Access
+                    </span>
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -344,7 +388,7 @@ export function RoomDiscovery({
                       aria-label={`Join room: ${room.name}`}
                       className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-yellow-400 text-black hover:bg-yellow-300 font-bold text-xs shadow-md transition"
                     >
-                      <span>Join Preview</span>
+                      <span>Join Voice Room</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

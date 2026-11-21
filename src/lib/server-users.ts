@@ -79,15 +79,86 @@ export const INITIAL_COMMUNITY_USERS: ServerUserRecord[] = [
   },
 ];
 
-// Unified server-side user registry
-export const serverUsersMap = new Map<string, ServerUserRecord>();
+// Global persistent container across hot reloads & worker threads
+const g = typeof globalThis !== 'undefined' ? (globalThis as any) : {};
 
-// Pre-populate initial community contributors
-INITIAL_COMMUNITY_USERS.forEach((u) => {
-  serverUsersMap.set(u.id, u);
-  serverUsersMap.set(u.username.toLowerCase(), u);
-  serverUsersMap.set(u.email.toLowerCase(), u);
-});
+function getRuntimeNodeModule(name: string) {
+  try {
+    if (typeof process !== 'undefined' && process?.versions?.node) {
+      const dynamicReq = eval('require');
+      return dynamicReq(name);
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+if (!g.__voicesphere_users_map) {
+  g.__voicesphere_users_map = new Map<string, ServerUserRecord>();
+
+  INITIAL_COMMUNITY_USERS.forEach((u) => {
+    g.__voicesphere_users_map.set(u.id, u);
+    g.__voicesphere_users_map.set(u.username.toLowerCase(), u);
+    g.__voicesphere_users_map.set(u.email.toLowerCase(), u);
+  });
+
+  // Try hydrating registered users from disk in Node.js runtime
+  try {
+    const fs = getRuntimeNodeModule('fs');
+    const path = getRuntimeNodeModule('path');
+    if (fs && path) {
+      const dataDir = path.join(process.cwd(), '.data');
+      const usersFile = path.join(dataDir, 'community_users.json');
+      if (fs.existsSync(usersFile)) {
+        const raw = fs.readFileSync(usersFile, 'utf8');
+        const list: ServerUserRecord[] = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          list.forEach((u) => {
+            if (u && u.id && u.username) {
+              g.__voicesphere_users_map.set(u.id, u);
+              g.__voicesphere_users_map.set(u.username.toLowerCase(), u);
+              if (u.email) g.__voicesphere_users_map.set(u.email.toLowerCase(), u);
+            }
+          });
+        }
+      }
+    }
+  } catch {
+    // Non-fatal edge fallback
+  }
+}
+
+export const serverUsersMap: Map<string, ServerUserRecord> = g.__voicesphere_users_map;
+
+function persistUsersToDisk() {
+  try {
+    const fs = getRuntimeNodeModule('fs');
+    const path = getRuntimeNodeModule('path');
+    if (fs && path) {
+      const dataDir = path.join(process.cwd(), '.data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const usersFile = path.join(dataDir, 'community_users.json');
+      const seen = new Set<string>();
+      const customUsers: ServerUserRecord[] = [];
+      const initialIds = new Set(INITIAL_COMMUNITY_USERS.map((u) => u.id));
+
+      serverUsersMap.forEach((user) => {
+        if (!seen.has(user.id)) {
+          seen.add(user.id);
+          if (!initialIds.has(user.id)) {
+            customUsers.push(user);
+          }
+        }
+      });
+      fs.writeFileSync(usersFile, JSON.stringify(customUsers, null, 2), 'utf8');
+    }
+  } catch {
+    // Edge/serverless fallback
+  }
+}
 
 export function registerServerUser(user: ServerUserRecord): boolean {
   const usernameKey = user.username.trim().toLowerCase();
@@ -100,6 +171,8 @@ export function registerServerUser(user: ServerUserRecord): boolean {
   serverUsersMap.set(user.id, user);
   serverUsersMap.set(usernameKey, user);
   serverUsersMap.set(emailKey, user);
+
+  persistUsersToDisk();
   return true;
 }
 

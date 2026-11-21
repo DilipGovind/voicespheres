@@ -16,15 +16,16 @@ export interface RealtimeEventPayload {
 class RealtimeClient {
   private socket: Socket | null = null;
   private channel: BroadcastChannel | null = null;
-  private eventSource: EventSource | null = null;
   private listeners: Map<string, Set<SocketEventHandler>> = new Map();
-  private isConnected = false;
+  private isConnected = true;
   private roomId: string | null = null;
   private currentUser: Participant | null = null;
   private sessionId = 'session_' + Math.random().toString(36).substring(2, 11);
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private serverSyncInterval: NodeJS.Timeout | null = null;
   private seenMessageIds: Set<string> = new Set();
+  private lastKnownCaptionsCount = 0;
+  private lastKnownChatCount = 0;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -41,63 +42,9 @@ class RealtimeClient {
         // BroadcastChannel unsupported or restricted
       }
 
-      // 2. Global cross-device HTTPS mesh (Windows, Mac, Android, iOS)
-      this.initGlobalMesh();
-
-      // 3. Standalone Node.js server fallback (for Docker / self-hosted)
+      // 2. Standalone Node.js server fallback (for Docker / self-hosted)
       this.initSocketFallback();
     }
-  }
-
-  private initGlobalMesh() {
-    if (typeof window === 'undefined') return;
-    try {
-      const globalSource = new EventSource('https://ntfy.sh/voicesphere_v2_global_rooms/sse');
-      globalSource.onmessage = (event) => {
-        try {
-          const raw = JSON.parse(event.data);
-          if (raw.event === 'message' && raw.message) {
-            const parsed = JSON.parse(raw.message);
-            if (parsed && parsed.senderSessionId !== this.sessionId) {
-              const msgKey = `${parsed.type}_${parsed.timestamp}_${parsed.senderSessionId}`;
-              if (!this.seenMessageIds.has(msgKey)) {
-                this.seenMessageIds.add(msgKey);
-                this.handleIncomingEvent(parsed.type, parsed.data);
-              }
-            }
-          }
-        } catch {}
-      };
-      globalSource.onerror = () => {};
-
-      // Hydrate recent global events from past 24 hours
-      fetch('https://ntfy.sh/voicesphere_v2_global_rooms/json?poll=1&since=24h')
-        .then((res) => res.text())
-        .then((text) => {
-          const lines = text.trim().split('\n');
-          for (const line of lines) {
-            try {
-              const raw = JSON.parse(line);
-              if (raw.event === 'message' && raw.message) {
-                const parsed = JSON.parse(raw.message);
-                if (parsed && parsed.senderSessionId !== this.sessionId) {
-                  const msgKey = `${parsed.type}_${parsed.timestamp}_${parsed.senderSessionId}`;
-                  if (!this.seenMessageIds.has(msgKey)) {
-                    this.seenMessageIds.add(msgKey);
-                    this.handleIncomingEvent(parsed.type, parsed.data);
-                  }
-                }
-              }
-            } catch {}
-          }
-        })
-        .catch(() => {});
-    } catch {}
-  }
-
-  private getCleanTopicName(roomId: string): string {
-    const cleanId = roomId.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
-    return `voicesphere_v2_${cleanId}`;
   }
 
   private initSocketFallback() {
@@ -128,87 +75,9 @@ class RealtimeClient {
   }
 
   /**
-   * Connect to global real-time cloud mesh (works cross-device Windows <-> Android <-> iOS)
-   */
-  private connectCloudMesh(roomId: string) {
-    if (typeof window === 'undefined') return;
-
-    // Close previous EventSource if any
-    if (this.eventSource) {
-      try {
-        this.eventSource.close();
-      } catch {}
-      this.eventSource = null;
-    }
-
-    const topic = this.getCleanTopicName(roomId);
-    const sseUrl = `https://ntfy.sh/${topic}/sse`;
-
-    try {
-      this.eventSource = new EventSource(sseUrl);
-
-      this.eventSource.onopen = () => {
-        this.isConnected = true;
-        this.trigger('connection:change', { connected: true, transport: 'cloud-mesh' });
-      };
-
-      this.eventSource.onmessage = (event) => {
-        try {
-          const raw = JSON.parse(event.data);
-          if (raw.event === 'message' && raw.message) {
-            const parsed: RealtimeEventPayload = JSON.parse(raw.message);
-            if (parsed && parsed.senderSessionId !== this.sessionId) {
-              const msgKey = `${parsed.type}_${parsed.timestamp}_${parsed.senderSessionId}`;
-              if (!this.seenMessageIds.has(msgKey)) {
-                this.seenMessageIds.add(msgKey);
-                if (this.seenMessageIds.size > 200) {
-                  // Keep cache size bounded
-                  const first = this.seenMessageIds.values().next().value;
-                  if (first) this.seenMessageIds.delete(first);
-                }
-                this.handleIncomingEvent(parsed.type, parsed.data);
-              }
-            }
-          }
-        } catch {
-          // ignore malformed payloads
-        }
-      };
-
-      this.eventSource.onerror = () => {
-        // EventSource will auto-reconnect natively
-      };
-    } catch (err) {
-      console.warn('Could not establish cloud SSE connection:', err);
-    }
-
-    // Pre-fetch recent messages from the past 5 minutes to hydrate existing participants
-    fetch(`https://ntfy.sh/${topic}/json?poll=1&since=5m`)
-      .then((res) => res.text())
-      .then((text) => {
-        const lines = text.trim().split('\n');
-        for (const line of lines) {
-          try {
-            const raw = JSON.parse(line);
-            if (raw.event === 'message' && raw.message) {
-              const parsed: RealtimeEventPayload = JSON.parse(raw.message);
-              if (parsed && parsed.senderSessionId !== this.sessionId) {
-                if (parsed.type === 'user:joined' || parsed.type === 'presence:heartbeat') {
-                  this.handleIncomingEvent(parsed.type, parsed.data);
-                }
-              }
-            }
-          } catch {}
-        }
-      })
-      .catch(() => {});
-  }
-
-  /**
    * Internal incoming event processor
    */
   private handleIncomingEvent(type: string, data: any) {
-    // If a new peer asks for sync or joined, reply immediately with our presence
     if (type === 'sync:request') {
       if (this.currentUser && this.roomId && data?.requesterSessionId !== this.sessionId) {
         this.publishMeshEvent('presence:heartbeat', {
@@ -223,8 +92,8 @@ class RealtimeClient {
 
   /**
    * Publish an event across all active layers:
-   * 1. Cloud mesh (cross-platform Android, Windows, iOS)
-   * 2. Local BroadcastChannel (cross-tab same machine)
+   * 1. Local BroadcastChannel (cross-tab same machine)
+   * 2. Backend HTTP sync (/api/rooms/sync)
    * 3. Socket.io (if self-hosted)
    */
   public publishMeshEvent(type: string, data: any) {
@@ -242,25 +111,14 @@ class RealtimeClient {
       timestamp: Date.now(),
     };
 
-    // 1. Publish to global cloud mesh (port 443 HTTPS)
-    const topic = isGlobal ? 'voicesphere_v2_global_rooms' : this.getCleanTopicName(this.roomId!);
-    try {
-      fetch(`https://ntfy.sh/${topic}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true,
-      }).catch(() => {});
-    } catch {}
-
-    // 2. BroadcastChannel cross-tab
+    // 1. BroadcastChannel cross-tab
     if (this.channel) {
       try {
         this.channel.postMessage(payload);
       } catch {}
     }
 
-    // 3. Socket.io fallback
+    // 2. Socket.io fallback
     if (this.socket && this.socket.connected) {
       try {
         this.socket.emit(type, data);
@@ -269,16 +127,15 @@ class RealtimeClient {
   }
 
   /**
-   * Join Room: registers user, connects cloud mesh, starts presence heartbeat
+   * Join Room: registers user, starts presence heartbeat and cross-device sync
    */
   public joinRoom(roomId: string, user: Participant) {
     this.roomId = roomId;
     this.currentUser = user;
+    this.lastKnownCaptionsCount = 0;
+    this.lastKnownChatCount = 0;
 
-    // Connect cloud mesh for cross-platform devices
-    this.connectCloudMesh(roomId);
-
-    // Announce join
+    // Announce join locally and across tabs
     this.publishMeshEvent('user:joined', { roomId, user });
 
     // Request presence sync from existing participants in the room
@@ -287,6 +144,9 @@ class RealtimeClient {
       requesterId: user.id,
       requesterSessionId: this.sessionId,
     });
+
+    // Immediate registration with serverless sync hub
+    this.syncRoomStateWithServer();
 
     // Start periodic presence heartbeat every 1.5 seconds for instant multi-device presence
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
@@ -299,39 +159,83 @@ class RealtimeClient {
       }
     }, 1500);
 
-    // Serverless HTTP Sync fallback ping every 2 seconds
+    // Fast HTTP room sync: every 1.5 seconds
     if (this.serverSyncInterval) clearInterval(this.serverSyncInterval);
     this.serverSyncInterval = setInterval(() => {
-      if (this.roomId && this.currentUser) {
-        fetch('/api/rooms/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            roomId: this.roomId,
-            user: this.currentUser,
-            action: 'heartbeat',
-          }),
-        })
-          .then((res) => res.json())
-          .then((syncData) => {
-            if (syncData?.participants && Array.isArray(syncData.participants)) {
-              for (const remoteP of syncData.participants) {
-                if (remoteP.id !== this.currentUser?.id) {
-                  this.trigger('presence:heartbeat', { user: remoteP });
-                }
-              }
-            }
-          })
-          .catch(() => {});
-      }
-    }, 2000);
+      this.syncRoomStateWithServer();
+    }, 1500);
   }
 
-  /**
-   * Leave Room: disconnects from cloud mesh and notifies peers
-   */
+  private async syncRoomStateWithServer() {
+    if (!this.roomId || !this.currentUser) return;
+
+    try {
+      // 1. Send heartbeat
+      const postRes = await fetch('/api/rooms/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: this.roomId,
+          user: this.currentUser,
+          action: 'heartbeat',
+        }),
+      });
+
+      if (!postRes.ok) return;
+      const syncData = await postRes.json();
+
+      // 2. Sync remote participants
+      if (syncData?.participants && Array.isArray(syncData.participants)) {
+        for (const remoteP of syncData.participants) {
+          if (remoteP.id !== this.currentUser.id) {
+            this.trigger('presence:heartbeat', { user: remoteP });
+          }
+        }
+      }
+
+      // 3. Sync recent captions
+      if (syncData?.recentCaptions && Array.isArray(syncData.recentCaptions)) {
+        const count = syncData.recentCaptions.length;
+        if (count > this.lastKnownCaptionsCount) {
+          const newCaps = syncData.recentCaptions.slice(this.lastKnownCaptionsCount);
+          for (const cap of newCaps) {
+            if (cap.speakerId !== this.currentUser.id) {
+              this.trigger('caption:new', cap);
+            }
+          }
+          this.lastKnownCaptionsCount = count;
+        }
+      }
+
+      // 4. Sync recent chat messages
+      if (syncData?.recentChat && Array.isArray(syncData.recentChat)) {
+        const count = syncData.recentChat.length;
+        if (count > this.lastKnownChatCount) {
+          const newMsgs = syncData.recentChat.slice(this.lastKnownChatCount);
+          for (const msg of newMsgs) {
+            if (msg.senderId !== this.currentUser.id) {
+              this.trigger('chat:message', msg);
+            }
+          }
+          this.lastKnownChatCount = count;
+        }
+      }
+    } catch {
+      // Offline or network error handled gracefully
+    }
+  }
+
   public broadcastRoomCreated(room: any) {
     this.publishMeshEvent('global:room_created', { room });
+
+    // Also persist directly to server
+    try {
+      fetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(room),
+      }).catch(() => {});
+    } catch {}
   }
 
   public broadcastUserRegistered(user: any) {
@@ -369,13 +273,6 @@ class RealtimeClient {
       }).catch(() => {});
     } catch {}
 
-    if (this.eventSource) {
-      try {
-        this.eventSource.close();
-      } catch {}
-      this.eventSource = null;
-    }
-
     this.roomId = null;
     this.currentUser = null;
   }
@@ -393,10 +290,32 @@ class RealtimeClient {
 
   public sendCaption(caption: LiveCaptionItem) {
     this.publishMeshEvent('caption:new', caption);
+
+    if (this.roomId) {
+      fetch('/api/rooms/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: this.roomId,
+          caption,
+        }),
+      }).catch(() => {});
+    }
   }
 
   public sendChatMessage(message: ChatMessageItem) {
     this.publishMeshEvent('chat:message', message);
+
+    if (this.roomId) {
+      fetch('/api/rooms/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: this.roomId,
+          chatMessage: message,
+        }),
+      }).catch(() => {});
+    }
   }
 
   public toggleMute(userId: string, isMuted: boolean) {
@@ -416,6 +335,18 @@ class RealtimeClient {
 
   public changeStage(stage: StructuredStage, activeSpeakerId: string | null) {
     this.publishMeshEvent('stage:change', { stage, activeSpeakerId });
+
+    if (this.roomId) {
+      fetch('/api/rooms/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: this.roomId,
+          stage,
+          activeSpeakerId,
+        }),
+      }).catch(() => {});
+    }
   }
 
   public sendModeratorAction(action: {
@@ -436,6 +367,21 @@ class RealtimeClient {
       targetUserId,
       signal,
     });
+
+    if (this.roomId) {
+      fetch('/api/rooms/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: this.roomId,
+          signal: {
+            senderUserId: this.currentUser.id,
+            targetUserId,
+            signal,
+          },
+        }),
+      }).catch(() => {});
+    }
   }
 
   // --- Event Listener Management ---
@@ -450,17 +396,21 @@ class RealtimeClient {
     };
   }
 
-  private trigger(event: string, data: any) {
+  public trigger(event: string, ...args: any[]) {
     const handlers = this.listeners.get(event);
     if (handlers) {
-      handlers.forEach((h) => {
+      handlers.forEach((handler) => {
         try {
-          h(data);
+          handler(...args);
         } catch (err) {
           console.error(`Error in event handler for ${event}:`, err);
         }
       });
     }
+  }
+
+  public emit(event: string, ...args: any[]) {
+    this.publishMeshEvent(event, args[0]);
   }
 }
 

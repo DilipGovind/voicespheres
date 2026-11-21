@@ -67,6 +67,21 @@ export default function Home() {
   const fetchRoomsFromServer = async (announceUpdate = false) => {
     setIsRefreshingRooms(true);
     try {
+      // Announce any locally created user rooms to server so edge instances learn them
+      try {
+        const savedRooms = localStorage.getItem('voicesphere_user_rooms');
+        if (savedRooms) {
+          const parsedList: Room[] = JSON.parse(savedRooms);
+          if (Array.isArray(parsedList) && parsedList.length > 0) {
+            fetch('/api/rooms', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ batch: parsedList }),
+            }).catch(() => {});
+          }
+        }
+      } catch {}
+
       const res = await fetch('/api/rooms');
       const data = await res.json();
       if (data?.rooms && Array.isArray(data.rooms)) {
@@ -131,27 +146,64 @@ export default function Home() {
         setRooms(allCombinedRooms);
       }
 
-      // Check if URL contains direct room invite link
+      // Check if user has an active room session to resume on page reload/refresh
+      let activeSessionRoomId: string | null = null;
+      let activeSessionRole: 'speaker' | 'listener' = 'speaker';
+      let activeSessionRoomData: Room | null = null;
+      try {
+        activeSessionRoomId = sessionStorage.getItem('voicesphere_active_room_id');
+        const role = sessionStorage.getItem('voicesphere_active_role');
+        if (role === 'listener' || role === 'speaker') activeSessionRole = role;
+        const rawData = sessionStorage.getItem('voicesphere_active_room_data');
+        if (rawData) activeSessionRoomData = JSON.parse(rawData);
+      } catch {}
+
+      // Check if URL contains room parameter
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const urlRoomId = params.get('room');
         if (urlRoomId) {
-          const deserialized = deserializeRoomFromUrl(params, allCombinedRooms);
-          if (deserialized) {
+          const isResumingSession = activeSessionRoomId === urlRoomId;
+
+          // Attempt to find room from cache, active session data, or URL deserialization
+          let targetRoom: Room | null =
+            allCombinedRooms.find((r) => r.id === urlRoomId) ||
+            (activeSessionRoomData && activeSessionRoomData.id === urlRoomId ? activeSessionRoomData : null) ||
+            deserializeRoomFromUrl(params, allCombinedRooms);
+
+          if (targetRoom) {
             setRooms((prev) => {
-              if (prev.some((r) => r.id === deserialized.id)) return prev;
-              return [deserialized, ...prev];
+              if (prev.some((r) => r.id === targetRoom!.id)) return prev;
+              return [targetRoom!, ...prev];
             });
-            setPreviewingRoom(deserialized);
-            announce(`Loaded shared room: ${deserialized.name}`, 'polite');
+
+            if (isResumingSession) {
+              // Seamless active session resumption: immediately re-enter room without modal
+              setInitialRole(activeSessionRole);
+              setActiveRoom(targetRoom);
+              setPreviewingRoom(null);
+              announce(`Resumed active session in ${targetRoom.name}`, 'polite');
+            } else {
+              // External shared invite link from a friend: open preview dialog
+              setPreviewingRoom(targetRoom);
+              announce(`Loaded shared room: ${targetRoom.name}`, 'polite');
+            }
           } else {
+            // Room not yet cached locally: fetch from server
             fetch(`/api/rooms?id=${encodeURIComponent(urlRoomId)}`)
               .then((res) => res.json())
               .then((data) => {
                 if (data?.room) {
                   setRooms((prev) => [data.room, ...prev]);
-                  setPreviewingRoom(data.room);
-                  announce(`Loaded shared room from link: ${data.room.name}`, 'polite');
+                  if (isResumingSession) {
+                    setInitialRole(activeSessionRole);
+                    setActiveRoom(data.room);
+                    setPreviewingRoom(null);
+                    announce(`Resumed active session in ${data.room.name}`, 'polite');
+                  } else {
+                    setPreviewingRoom(data.room);
+                    announce(`Loaded shared room from link: ${data.room.name}`, 'polite');
+                  }
                 }
               })
               .catch(() => {});
@@ -218,12 +270,19 @@ export default function Home() {
   }) => {
     if (!previewingRoom) return;
     setCurrentUserName(displayName);
-    setInitialRole(joinAsListener ? 'listener' : 'speaker');
+    const chosenRole = joinAsListener ? 'listener' : 'speaker';
+    setInitialRole(chosenRole);
 
     const updatedRoom: Room = {
       ...previewingRoom,
       passcode: passcode || previewingRoom.passcode,
     };
+
+    try {
+      sessionStorage.setItem('voicesphere_active_room_id', updatedRoom.id);
+      sessionStorage.setItem('voicesphere_active_role', chosenRole);
+      sessionStorage.setItem('voicesphere_active_room_data', JSON.stringify(updatedRoom));
+    } catch {}
 
     setActiveRoom(updatedRoom);
     updateUrlRoomParam(previewingRoom.id);
@@ -241,6 +300,10 @@ export default function Home() {
         'voicesphere_user_rooms',
         JSON.stringify([newRoom, ...parsedList.filter((r) => r.id !== newRoom.id)])
       );
+
+      sessionStorage.setItem('voicesphere_active_room_id', newRoom.id);
+      sessionStorage.setItem('voicesphere_active_role', 'speaker');
+      sessionStorage.setItem('voicesphere_active_room_data', JSON.stringify(newRoom));
     } catch {}
 
     fetch('/api/rooms', {
@@ -259,6 +322,11 @@ export default function Home() {
     if (activeRoom) {
       announce(`Left room ${activeRoom.name}`, 'polite');
     }
+    try {
+      sessionStorage.removeItem('voicesphere_active_room_id');
+      sessionStorage.removeItem('voicesphere_active_role');
+      sessionStorage.removeItem('voicesphere_active_room_data');
+    } catch {}
     setActiveRoom(null);
     updateUrlRoomParam(null);
   };

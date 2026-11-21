@@ -1,44 +1,11 @@
 import { NextResponse } from 'next/server';
-import { Participant, LiveCaptionItem, ChatMessageItem } from '@/types/room';
+import {
+  getOrCreateRoomSync,
+  pruneStaleParticipants,
+  touchRoomParticipant,
+} from '@/lib/server-rooms';
 
 export const runtime = 'edge';
-
-interface RoomSyncState {
-  participants: Map<string, Participant & { lastSeen: number }>;
-  recentCaptions: LiveCaptionItem[];
-  recentChat: ChatMessageItem[];
-  currentStage?: string;
-  activeSpeakerId?: string | null;
-  lastUpdated: number;
-}
-
-// In-memory room sync store (per edge instance)
-const roomsSyncMap = new Map<string, RoomSyncState>();
-
-function getOrCreateRoomSync(roomId: string): RoomSyncState {
-  let state = roomsSyncMap.get(roomId);
-  if (!state) {
-    state = {
-      participants: new Map(),
-      recentCaptions: [],
-      recentChat: [],
-      lastUpdated: Date.now(),
-    };
-    roomsSyncMap.set(roomId, state);
-  }
-  return state;
-}
-
-// Prune participants not seen in the last 20 seconds
-function pruneStaleParticipants(state: RoomSyncState) {
-  const now = Date.now();
-  const cutoff = now - 20000;
-  state.participants.forEach((p, id) => {
-    if (p.lastSeen < cutoff) {
-      state.participants.delete(id);
-    }
-  });
-}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -75,11 +42,7 @@ export async function POST(request: Request) {
     state.lastUpdated = Date.now();
 
     if (user && user.id) {
-      if (action === 'leave') {
-        state.participants.delete(user.id);
-      } else {
-        state.participants.set(user.id, { ...user, lastSeen: Date.now() });
-      }
+      touchRoomParticipant(roomId, user, action);
     }
 
     if (caption) {
