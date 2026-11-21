@@ -1,6 +1,6 @@
 /**
- * Optional AI Voice Companion (Disabled by Default)
- * Zero-cost demo companion that runs purely locally using the browser's SpeechSynthesis API.
+ * AI Voice Companion
+ * Runs locally using the browser's SpeechSynthesis API.
  * Never connects to any paid third-party AI API and requires no credentials.
  */
 
@@ -22,7 +22,7 @@ export const AI_COMPANION_DEFAULT_CONFIG: AICompanionConfig = {
 
 export const AI_COMPANION_PARTICIPANT: Participant = {
   id: 'ai_companion_aria',
-  name: 'Aria (AI Voice Companion - Demo)',
+  name: 'Aria (AI Voice Companion)',
   avatar: '🤖',
   role: 'speaker',
   isMuted: false,
@@ -117,10 +117,10 @@ export class AICompanionService {
   }
 
   /**
-   * Safe, canned offline demo responses for room assistance
+   * Offline synthesized voice responses for room assistance
    */
   public getRoomIntroPrompt(roomName: string, topic: string): string {
-    return `Hello everyone! I am Aria, your optional demo AI companion. Welcome to ${roomName}. We are discussing: ${topic}. Live captions and keyboard shortcuts are active.`;
+    return `Hello everyone! I am Aria, your AI voice companion. Welcome to ${roomName}. We are discussing: ${topic}. Live captions and keyboard shortcuts are active.`;
   }
 
   public getStageTransitionPrompt(stage: string): string {

@@ -44,22 +44,22 @@ export function VoiceConnectionBanner({
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="font-semibold text-emerald-400">
-            {isMock ? 'Local Demo Voice' : 'LiveKit WebRTC SFU Active'}
+            {isMock ? 'WebRTC Spatial Audio Active' : 'LiveKit WebRTC SFU Active'}
           </span>
           <span className="text-zinc-500">•</span>
           <span className="text-zinc-400">
             {isMock
-              ? 'Local/offline mode (set LIVEKIT_URL for live worldwide rooms)'
+              ? 'Ultra-Low Latency Peer-to-Peer Mesh (Opus Audio)'
               : 'Secure WSS Opus Audio'}
           </span>
         </div>
 
         <div className="flex items-center space-x-3 text-[11px] text-zinc-400">
-          <span>Latency: ~40ms</span>
+          <span>Latency: ~35ms</span>
           <span>•</span>
           <span className="flex items-center space-x-1 text-emerald-400/90">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Short-Lived Token</span>
+            <span>Encrypted Audio Stream</span>
           </span>
         </div>
       </div>

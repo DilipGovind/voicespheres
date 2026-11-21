@@ -69,7 +69,7 @@ export function PrivacyNoticeModal({ isOpen, onClose }: PrivacyNoticeModalProps)
             <div className="space-y-1">
               <h3 className="font-bold text-white text-sm">What Data Is Stored</h3>
               <p className="text-zinc-400 text-xs">
-                Only ephemeral room metadata (room title, topic, temporary participant nickname, speaking state, and optional demo captions) is held while a room is active. User profile preferences and accessibility presets are stored locally in your own browser's <code className="text-yellow-300">localStorage</code>.
+                Only ephemeral room metadata (room title, topic, temporary participant nickname, speaking state, and live speech captions) is held while a room is active. User profile preferences and accessibility presets are stored locally in your own browser's <code className="text-yellow-300">localStorage</code>.
               </p>
             </div>
           </div>

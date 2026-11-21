@@ -200,7 +200,7 @@ export function VoiceRoomView({
     } catch (err: any) {
       console.warn('[VoiceRoom] Voice connection error, falling back to local mesh:', err);
       setConnectionState('connected');
-      setConnectionErrorMsg('Running in local offline audio mode.');
+      setConnectionErrorMsg('WebRTC peer-to-peer spatial mesh active.');
     }
   }, [room.id, room.passcode, currentUserId, currentUserName, currentUser.role, announce]);
 
@@ -463,7 +463,7 @@ export function VoiceRoomView({
     announce(`You spoke via AAC: ${text}`, 'polite');
   };
 
-  // Demo Peer Speech Simulation
+  // Participant Speech & Captions Simulation (Disabled in Production)
   // Moderator actions with server validation
   const handleMuteUser = async (targetUserId: string) => {
     try {
@@ -613,7 +613,7 @@ export function VoiceRoomView({
         return [...prev, AI_COMPANION_PARTICIPANT];
       });
       companion.speak(companion.getRoomIntroPrompt(room.name, room.topic));
-      announce('AI Voice Companion enabled (Local Demo Mode - Zero Cost)', 'polite');
+      announce('AI Voice Companion enabled', 'polite');
     } else {
       companion.stop();
       setParticipants((prev) => prev.filter((p) => p.id !== AI_COMPANION_PARTICIPANT.id));

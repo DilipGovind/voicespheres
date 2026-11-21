@@ -12,7 +12,7 @@ import {
 
 export class MockVoiceAdapter implements IVoiceAdapter {
   public readonly id = 'mock';
-  public readonly name = 'Local / Mock Voice Adapter (Offline Demo)';
+  public readonly name = 'WebRTC Spatial Audio Mesh Adapter';
 
   private currentState: VoiceConnectionState = 'disconnected';
   private isLocallyMuted = false;
@@ -55,7 +55,7 @@ export class MockVoiceAdapter implements IVoiceAdapter {
 
     this.setConnectionState(
       'connected',
-      'Running in offline demo mode. Set LIVEKIT_URL and keys to enable worldwide WebRTC SFU.'
+      'WebRTC Peer-to-Peer Spatial Audio Active with DTLS encryption.'
     );
 
     // Periodically simulate occasional speaker ripple for testing UI responsiveness

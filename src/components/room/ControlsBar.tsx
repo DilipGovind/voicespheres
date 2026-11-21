@@ -166,11 +166,11 @@ export function ControlsBar({
               aria-label={
                 isAiEnabled
                   ? 'Disable optional AI Voice Companion'
-                  : 'Enable optional AI Voice Companion (Demo)'
+                  : 'Enable optional AI Voice Companion'
               }
               title={
                 isAiEnabled
-                  ? 'AI Voice Companion Active (Demo)'
+                  ? 'AI Voice Companion Active'
                   : 'Optional AI Voice Companion (Disabled by default)'
               }
               className={`p-2.5 rounded-2xl border-2 transition ${

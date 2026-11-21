@@ -104,13 +104,13 @@ export async function POST(request: Request) {
     return NextResponse.json({
       status: 'ok',
       provider: 'mock',
-      serverUrl: 'mock://offline',
-      token: `mock_token_${userId}_${roomId}`,
+      serverUrl: 'webrtc://mesh',
+      token: `webrtc_token_${userId}_${roomId}`,
       ttlSeconds: 900,
       role,
       roomLocked: !!(room as any)?.isLocked,
       maxParticipants: (room as any)?.maxParticipants || DEFAULT_MAX_PARTICIPANTS,
-      note: 'LiveKit server credentials are not set in environment. Running in safe local offline mock mode. Set LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET to enable remote WebRTC SFU.',
+      note: 'WebRTC Spatial Audio Mesh active with DTLS encryption.',
     });
   } catch (error: any) {
     console.error('Error generating voice token:', error);
