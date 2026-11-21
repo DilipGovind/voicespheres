@@ -12,6 +12,7 @@ import {
 import { useAccessibility } from './accessibility-context';
 import { useI18n } from './i18n-context';
 import { SupportedLocale } from '@/types/i18n';
+import { realtimeClient } from './socket-client';
 
 interface AuthContextType {
   user: UserAccount | null;
@@ -39,7 +40,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { applyPreset, announce } = useAccessibility();
   const { setLocale } = useI18n();
 
-  // Load existing session on initial mount
+  const syncRemoteUsers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/users');
+      const data = await res.json();
+      if (data?.users && Array.isArray(data.users)) {
+        const local = getRegisteredUsers();
+        const map = new Map<string, UserAccount>();
+        local.forEach((u) => map.set(u.id, u));
+        data.users.forEach((u: UserAccount) => {
+          if (!map.has(u.id)) {
+            map.set(u.id, u);
+          } else {
+            map.set(u.id, { ...map.get(u.id)!, ...u });
+          }
+        });
+        const combined = Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
+        setRegisteredUsers(combined);
+        try {
+          localStorage.setItem('voicesphere_registered_users', JSON.stringify(combined));
+        } catch {}
+      }
+    } catch {}
+  }, []);
+
+  // Load existing session and sync cross-device users on initial mount
   useEffect(() => {
     try {
       const all = getRegisteredUsers();
@@ -58,7 +83,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore
     }
-  }, []);
+
+    // Sync remote users on startup
+    syncRemoteUsers();
+
+    // Poll periodically for cross-device registrations
+    const interval = setInterval(syncRemoteUsers, 8000);
+
+    // Listen to real-time cross-device registration events
+    const unsub = realtimeClient.on('global:user_registered', (payload: any) => {
+      const newUser: UserAccount = payload?.user || payload;
+      if (newUser && newUser.id) {
+        setRegisteredUsers((prev) => {
+          if (prev.some((u) => u.id === newUser.id)) return prev;
+          const updated = [newUser, ...prev];
+          try {
+            localStorage.setItem('voicesphere_registered_users', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
+  }, [syncRemoteUsers]);
 
   const openAuthModal = useCallback((tab: 'login' | 'register' = 'login') => {
     setAuthModalInitialTab(tab);
@@ -96,6 +147,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (res.ok && data?.user) {
           setUser(data.user);
           saveCurrentSession(data.user);
+          const current = getRegisteredUsers();
+          if (!current.some((u) => u.id === data.user.id)) {
+            const updated = [data.user, ...current];
+            setRegisteredUsers(updated);
+            try {
+              localStorage.setItem('voicesphere_registered_users', JSON.stringify(updated));
+            } catch {}
+          }
+          if (data.user.preferredPreset) {
+            applyPreset(data.user.preferredPreset as any);
+          }
+          if (data.user.preferredLanguage) {
+            setLocale(data.user.preferredLanguage as SupportedLocale);
+          }
           announce(`Signed in as ${data.user.displayName}`, 'polite');
           return { success: true };
         }
@@ -118,12 +183,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       saveCurrentSession(localResult.user);
       setRegisteredUsers(getRegisteredUsers());
 
-      // Sync with server in background
-      fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-      }).catch(() => {});
+      // Sync with server API and broadcast to other devices
+      try {
+        await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        });
+      } catch {}
+
+      realtimeClient.broadcastUserRegistered(localResult.user);
 
       if (localResult.user.preferredPreset) {
         applyPreset(localResult.user.preferredPreset as any);

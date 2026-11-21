@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
-import { RegisterInput } from '@/types/auth';
+import { RegisterInput, UserAccount, UserRole } from '@/types/auth';
+import { registerServerUser, findServerUser } from '@/lib/server-users';
 
 export const runtime = 'edge';
-
-// Edge-safe in-memory registry for serverless instances
-const serverEdgeUsers = new Map<string, any>();
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +18,29 @@ export async function POST(request: Request) {
     const cleanUsername = body.username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     const cleanEmail = body.email.trim().toLowerCase();
 
-    if (serverEdgeUsers.has(cleanUsername) || serverEdgeUsers.has(cleanEmail)) {
+    if (cleanUsername.length < 3) {
+      return NextResponse.json(
+        { error: 'Username must be at least 3 characters long.' },
+        { status: 400 }
+      );
+    }
+
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      return NextResponse.json(
+        { error: 'Please provide a valid email address.' },
+        { status: 400 }
+      );
+    }
+
+    if (body.password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters long.' },
+        { status: 400 }
+      );
+    }
+
+    const existing = findServerUser(cleanUsername) || findServerUser(cleanEmail);
+    if (existing) {
       return NextResponse.json(
         { error: 'An account with that username or email already exists.' },
         { status: 409 }
@@ -30,13 +50,13 @@ export async function POST(request: Request) {
     const avatars = ['🌟', '🦉', '🎨', '🚀', '🌈', '🌻', '💡', '🎵', '⚡', '🌊', '🎙️', '✨'];
     const assignedAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
-    const newUser = {
+    const newUser: UserAccount = {
       id: 'user_' + Math.random().toString(36).substring(2, 9),
       username: cleanUsername,
       displayName: body.displayName?.trim() || cleanUsername,
       email: cleanEmail,
       avatar: assignedAvatar,
-      role: 'member' as const,
+      role: 'member' as UserRole,
       pronouns: body.pronouns?.trim() || undefined,
       bio: body.bio?.trim() || 'VoiceSphere community member.',
       preferredLanguage: body.preferredLanguage || 'en',
@@ -48,8 +68,13 @@ export async function POST(request: Request) {
       lastLoginAt: Date.now(),
     };
 
-    serverEdgeUsers.set(cleanUsername, { ...newUser, passwordHash: body.password });
-    serverEdgeUsers.set(cleanEmail, { ...newUser, passwordHash: body.password });
+    const registered = registerServerUser({ ...newUser, passwordHash: body.password });
+    if (!registered) {
+      return NextResponse.json(
+        { error: 'Failed to register account. Username or email taken.' },
+        { status: 409 }
+      );
+    }
 
     const token = 'vst_' + Math.random().toString(36).substring(2) + '.' + Date.now();
 
@@ -58,10 +83,10 @@ export async function POST(request: Request) {
       message: 'Account registered successfully.',
       user: newUser,
       token,
-    });
+    }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err?.message || 'Failed to process registration.' },
+      { error: err?.message || 'Internal server error processing registration.' },
       { status: 500 }
     );
   }

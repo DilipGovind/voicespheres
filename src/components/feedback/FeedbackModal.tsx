@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { FeedbackCategory } from '@/types/feedback';
 import { submitNewFeedback } from '@/lib/feedback-store';
+import { realtimeClient } from '@/lib/socket-client';
 import {
   MessageSquare,
   Star,
@@ -105,6 +106,11 @@ export function FeedbackModal({ isOpen, onClose, onFeedbackSubmitted }: Feedback
           activePreset: settings.preset,
         }),
       }).catch(() => {});
+
+      // Broadcast to other devices via global mesh
+      if (result.item) {
+        realtimeClient.broadcastFeedbackSubmitted(result.item);
+      }
 
       setSuccessMessage('Thank you for your valuable feedback! It has been recorded.');
       announce('Feedback submitted successfully. Thank you for helping improve VoiceSphere.', 'polite');

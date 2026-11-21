@@ -214,6 +214,9 @@ export function VoiceRoomView({
       return [...prev, currentUser];
     });
 
+    // Connect to cross-device cloud mesh and start presence heartbeats
+    realtimeClient.joinRoom(room.id, currentUser);
+
     // Initialize voice connection
     initializeVoiceConnection();
 
@@ -264,6 +267,21 @@ export function VoiceRoomView({
           announce(`${data.user.name} joined the room`, 'polite');
           webRTCManager.connectPeer(currentUserId, data.user.id);
           return [...prev, data.user];
+        });
+      }
+    });
+
+    const unsubHeartbeat = realtimeClient.on('presence:heartbeat', (data: { user: Participant }) => {
+      if (data?.user && data.user.id !== currentUserId) {
+        setParticipants((prev) => {
+          const idx = prev.findIndex((p) => p.id === data.user.id);
+          if (idx === -1) {
+            announce(`${data.user.name} is in the room`, 'polite');
+            return [...prev, data.user];
+          }
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], ...data.user };
+          return updated;
         });
       }
     });
@@ -354,6 +372,7 @@ export function VoiceRoomView({
       webRTCManager.stopLocalStream();
       realtimeClient.leaveRoom(room.id, currentUserId);
       unsubJoin();
+      unsubHeartbeat();
       unsubLeave();
       unsubMute();
       unsubSpeaking();

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FeedbackItem, FeedbackCategory } from '@/types/feedback';
 import { getStoredFeedback, toggleHelpfulReaction } from '@/lib/feedback-store';
+import { realtimeClient } from '@/lib/socket-client';
 import {
   MessageSquare,
   Star,
@@ -25,13 +26,62 @@ export function CommunityFeedbackSection({ onOpenFeedback }: CommunityFeedbackSe
   const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<'all' | FeedbackCategory>('all');
 
-  const loadFeedback = () => {
-    setFeedbackList(getStoredFeedback());
-  };
+  const loadFeedback = useCallback(async () => {
+    // 1. Load local feedback
+    const local = getStoredFeedback();
+    setFeedbackList(local);
+
+    // 2. Fetch remote community feedback across all devices
+    try {
+      const res = await fetch('/api/feedback');
+      const data = await res.json();
+      if (data?.feedback && Array.isArray(data.feedback)) {
+        const map = new Map<string, FeedbackItem>();
+        local.forEach((item) => map.set(item.id, item));
+        data.feedback.forEach((item: FeedbackItem) => {
+          if (!map.has(item.id)) {
+            map.set(item.id, item);
+          } else {
+            const existing = map.get(item.id)!;
+            map.set(item.id, {
+              ...existing,
+              ...item,
+              helpfulCount: Math.max(existing.helpfulCount, item.helpfulCount),
+            });
+          }
+        });
+        const combined = Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
+        setFeedbackList(combined);
+        try {
+          localStorage.setItem('voicesphere_community_feedback', JSON.stringify(combined));
+        } catch {}
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     loadFeedback();
-  }, []);
+    const interval = setInterval(loadFeedback, 6000);
+
+    const unsub = realtimeClient.on('global:feedback_submitted', (payload: any) => {
+      const newFeedback: FeedbackItem = payload?.feedback || payload;
+      if (newFeedback && newFeedback.id) {
+        setFeedbackList((prev) => {
+          if (prev.some((f) => f.id === newFeedback.id)) return prev;
+          const updated = [newFeedback, ...prev];
+          try {
+            localStorage.setItem('voicesphere_community_feedback', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
+  }, [loadFeedback]);
 
   const handleHelpfulClick = (id: string) => {
     const updated = toggleHelpfulReaction(id);

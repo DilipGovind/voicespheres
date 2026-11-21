@@ -41,7 +41,10 @@ class RealtimeClient {
         // BroadcastChannel unsupported or restricted
       }
 
-      // 2. Standalone Node.js server fallback (for Docker / self-hosted)
+      // 2. Global cross-device HTTPS mesh (Windows, Mac, Android, iOS)
+      this.initGlobalMesh();
+
+      // 3. Standalone Node.js server fallback (for Docker / self-hosted)
       this.initSocketFallback();
     }
   }
@@ -56,12 +59,39 @@ class RealtimeClient {
           if (raw.event === 'message' && raw.message) {
             const parsed = JSON.parse(raw.message);
             if (parsed && parsed.senderSessionId !== this.sessionId) {
-              this.handleIncomingEvent(parsed.type, parsed.data);
+              const msgKey = `${parsed.type}_${parsed.timestamp}_${parsed.senderSessionId}`;
+              if (!this.seenMessageIds.has(msgKey)) {
+                this.seenMessageIds.add(msgKey);
+                this.handleIncomingEvent(parsed.type, parsed.data);
+              }
             }
           }
         } catch {}
       };
       globalSource.onerror = () => {};
+
+      // Hydrate recent global events from past 24 hours
+      fetch('https://ntfy.sh/voicesphere_v2_global_rooms/json?poll=1&since=24h')
+        .then((res) => res.text())
+        .then((text) => {
+          const lines = text.trim().split('\n');
+          for (const line of lines) {
+            try {
+              const raw = JSON.parse(line);
+              if (raw.event === 'message' && raw.message) {
+                const parsed = JSON.parse(raw.message);
+                if (parsed && parsed.senderSessionId !== this.sessionId) {
+                  const msgKey = `${parsed.type}_${parsed.timestamp}_${parsed.senderSessionId}`;
+                  if (!this.seenMessageIds.has(msgKey)) {
+                    this.seenMessageIds.add(msgKey);
+                    this.handleIncomingEvent(parsed.type, parsed.data);
+                  }
+                }
+              }
+            } catch {}
+          }
+        })
+        .catch(() => {});
     } catch {}
   }
 
@@ -302,6 +332,14 @@ class RealtimeClient {
    */
   public broadcastRoomCreated(room: any) {
     this.publishMeshEvent('global:room_created', { room });
+  }
+
+  public broadcastUserRegistered(user: any) {
+    this.publishMeshEvent('global:user_registered', { user });
+  }
+
+  public broadcastFeedbackSubmitted(feedback: any) {
+    this.publishMeshEvent('global:feedback_submitted', { feedback });
   }
 
   public leaveRoom(roomId: string, userId: string) {

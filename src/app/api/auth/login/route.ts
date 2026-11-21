@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { LoginInput } from '@/types/auth';
+import { findServerUser } from '@/lib/server-users';
 
 export const runtime = 'edge';
-
-const serverEdgeUsers = new Map<string, any>();
 
 export async function POST(request: Request) {
   try {
@@ -16,8 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const idLower = body.identifier.trim().toLowerCase();
-    const found = serverEdgeUsers.get(idLower);
+    const found = findServerUser(body.identifier);
 
     if (!found) {
       return NextResponse.json(
