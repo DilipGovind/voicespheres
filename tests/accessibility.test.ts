@@ -71,4 +71,40 @@ describe('Universal Accessibility Configuration', () => {
     expect(dyslexiaPreset.lineSpacing).toBe('double');
     expect(dyslexiaPreset.letterSpacingWide).toBe(true);
   });
+
+  it('Clean preset transitions do not leak switch access into cognitive mode', () => {
+    // Simulating preset transition from LIMITED_MOBILITY to COGNITIVE over default base
+    const mobilityApplied = {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      ...PRESET_CONFIGURATIONS.LIMITED_MOBILITY,
+      preset: 'LIMITED_MOBILITY' as const,
+    };
+    expect(mobilityApplied.switchAccessEnabled).toBe(true);
+
+    const cognitiveApplied = {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      ...PRESET_CONFIGURATIONS.COGNITIVE,
+      preset: 'COGNITIVE' as const,
+    };
+    expect(cognitiveApplied.switchAccessEnabled).toBe(false);
+    expect(cognitiveApplied.simpleLanguageMode).toBe(true);
+  });
+
+  it('Clean preset transitions do not leak dyslexia font into default mode', () => {
+    const dyslexiaApplied = {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      ...PRESET_CONFIGURATIONS.DYSLEXIA_FRIENDLY,
+      preset: 'DYSLEXIA_FRIENDLY' as const,
+    };
+    expect(dyslexiaApplied.fontDyslexic).toBe(true);
+    expect(dyslexiaApplied.theme).toBe('dyslexic-cream');
+
+    const defaultApplied = {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      ...PRESET_CONFIGURATIONS.DEFAULT,
+      preset: 'DEFAULT' as const,
+    };
+    expect(defaultApplied.fontDyslexic).toBe(false);
+    expect(defaultApplied.theme).toBe('dark');
+  });
 });

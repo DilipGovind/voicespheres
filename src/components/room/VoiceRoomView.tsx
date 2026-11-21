@@ -483,6 +483,7 @@ export function VoiceRoomView({
           hostUserId: currentUserId,
           action: 'mute_participant',
           targetUserId,
+          roomData: room,
         }),
       });
     } catch {}
@@ -504,6 +505,7 @@ export function VoiceRoomView({
           action: 'change_role',
           targetUserId,
           newRole: role,
+          roomData: room,
         }),
       });
     } catch {}
@@ -524,6 +526,7 @@ export function VoiceRoomView({
           hostUserId: currentUserId,
           action: 'kick_participant',
           targetUserId,
+          roomData: room,
         }),
       });
     } catch {}
@@ -545,6 +548,7 @@ export function VoiceRoomView({
         body: JSON.stringify({
           hostUserId: currentUserId,
           action: 'toggle_lock',
+          roomData: room,
         }),
       });
     } catch {}
@@ -561,6 +565,7 @@ export function VoiceRoomView({
         body: JSON.stringify({
           hostUserId: currentUserId,
           action: 'end_room',
+          roomData: room,
         }),
       });
     } catch {}

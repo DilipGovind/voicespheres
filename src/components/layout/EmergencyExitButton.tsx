@@ -14,6 +14,12 @@ export function EmergencyExitButton({ onExit, roomName }: EmergencyExitButtonPro
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Do not trigger emergency room exit if a modal dialog is currently open
+      const hasOpenModal = document.querySelector('[role="dialog"]') !== null;
+      if (hasOpenModal && e.key === 'Escape') {
+        return;
+      }
+
       // Escape or Alt+Q to trigger emergency leave
       if (e.key === 'Escape' || (e.altKey && (e.key === 'q' || e.key === 'Q'))) {
         announce('Emergency quick exit triggered. Leaving room now.', 'assertive');

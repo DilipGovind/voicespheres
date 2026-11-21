@@ -325,7 +325,7 @@ export default function Home() {
                 className="flex items-center space-x-2 rtl:space-x-reverse px-5 py-3 rounded-2xl bg-yellow-400 text-black hover:bg-yellow-300 font-extrabold text-sm shadow-xl shadow-yellow-400/20 transition"
               >
                 <Sliders className="w-4 h-4 stroke-[3]" />
-                <span>One-Click Accessibility Presets</span>
+                <span>{t('accessibilityPresets')}</span>
               </button>
 
               <button
@@ -351,7 +351,7 @@ export default function Home() {
                 className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-semibold text-sm transition"
               >
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Privacy Notice</span>
+                <span>{t('privacyNotice')}</span>
               </button>
             </div>
           </div>
@@ -383,7 +383,7 @@ export default function Home() {
         <section aria-labelledby="discovery-heading" className="space-y-6 pt-4 border-t border-zinc-800">
           <div>
             <h2 id="discovery-heading" className="text-xl sm:text-2xl font-black text-white">
-              Discover Inclusive Communities
+              {t('discoverRooms')}
             </h2>
             <p className="text-xs sm:text-sm text-zinc-400">
               Filter by language, community category, live captioning, and AAC support

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Participant, Room } from '@/types/room';
 import { useAccessibility } from '@/lib/accessibility-context';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import {
   ShieldAlert,
   Lock,
@@ -47,18 +48,25 @@ export function HostControlsModal({
   const { announce } = useAccessibility();
   const [confirmEndRoom, setConfirmEndRoom] = useState(false);
 
+  useModalDismiss(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const otherParticipants = participants.filter((p) => p.id !== currentUserId);
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="host-controls-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
     >
-      <div className="bg-zinc-900 border-2 border-zinc-700 w-full max-w-xl rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative text-zinc-100 max-h-[90vh] overflow-y-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="host-controls-title"
+        className="bg-zinc-900 border-2 border-zinc-700 w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl rounded-3xl p-4 sm:p-8 space-y-6 shadow-2xl relative text-zinc-100 max-h-[90vh] overflow-y-auto"
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -270,6 +278,7 @@ export function HostControlsModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Done and close host controls"
             className="px-6 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition focus-visible:ring-2 focus-visible:ring-yellow-400"
           >
             Done

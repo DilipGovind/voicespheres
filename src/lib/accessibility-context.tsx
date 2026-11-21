@@ -60,15 +60,28 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   const applyPreset = useCallback((preset: AccessibilityPreset) => {
     setSettings((prev) => {
+      if (preset === 'CUSTOM') {
+        const updated: AccessibilitySettings = {
+          ...prev,
+          preset: 'CUSTOM',
+        };
+        persistSettings(updated);
+        return updated;
+      }
       const presetOverrides = PRESET_CONFIGURATIONS[preset] || {};
       const updated: AccessibilitySettings = {
-        ...prev,
+        ...DEFAULT_ACCESSIBILITY_SETTINGS,
         ...presetOverrides,
         preset,
       };
       persistSettings(updated);
       return updated;
     });
+
+    const nextConfig = PRESET_CONFIGURATIONS[preset];
+    if (!nextConfig?.switchAccessEnabled) {
+      setIsSwitchScanActive(false);
+    }
   }, []);
 
   const updateSetting = useCallback(

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { Participant } from '@/types/room';
 import { ShieldAlert, X, AlertTriangle, CheckCircle } from 'lucide-react';
 
@@ -24,6 +25,8 @@ export function ReportAbuseModal({
   const [details, setDetails] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  useModalDismiss(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const targetableParticipants = participants.filter((p) => p.id !== currentUserId);
@@ -43,12 +46,17 @@ export function ReportAbuseModal({
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="report-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
     >
-      <div className="relative w-full max-w-lg rounded-2xl border-2 border-red-500 bg-zinc-950 p-6 text-zinc-100 shadow-2xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-modal-title"
+        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-lg rounded-2xl border-2 border-red-500 bg-zinc-950 p-4 sm:p-6 text-zinc-100 shadow-2xl max-h-[90vh] overflow-y-auto"
+      >
         <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
           <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
             <div className="p-2 rounded-xl bg-red-500/20 text-red-400 border border-red-500/40">

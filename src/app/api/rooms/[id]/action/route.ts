@@ -22,7 +22,7 @@ export async function POST(
   try {
     const roomId = params.id;
     const body = await request.json();
-    const { hostUserId, action, targetUserId, newRole } = body;
+    const { hostUserId, action, targetUserId, newRole, roomData } = body;
 
     if (!roomId || !hostUserId || !action) {
       return NextResponse.json(
@@ -38,9 +38,60 @@ export async function POST(
       );
     }
 
-    const room = serverRoomsMap.get(roomId);
-    if (!room) {
-      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    let room: Room;
+    const existing = serverRoomsMap.get(roomId);
+    if (existing) {
+      room = existing;
+    } else if (roomData && typeof roomData === 'object' && roomData.id) {
+      room = roomData as Room;
+      serverRoomsMap.set(roomId, room);
+    } else {
+      room = {
+        id: roomId,
+        name: 'Community Room',
+        topic: 'Open Discussion',
+        description: 'Inclusive community voice room',
+        category: 'general',
+        language: 'en',
+        country: 'Global',
+        isPrivate: false,
+        hostId: hostUserId,
+        createdAt: Date.now(),
+        accessibilityFeatures: {
+          captionsAvailable: true,
+          textParticipation: true,
+          aacSupport: true,
+          lowStimulation: false,
+          structuredDiscussion: false,
+          listeningOnlyAllowed: true,
+          screenReaderOptimized: true,
+          quietRoom: false,
+        },
+        structuredStage: {
+          currentStage: 'DISCUSSION',
+          stageTitle: 'Open Discussion',
+          stageDescription: 'Community floor',
+          speakingTimeLimitSeconds: 120,
+          activeSpeakerId: hostUserId,
+          stageStartedAt: Date.now(),
+          queue: [],
+        },
+        participants: [
+          {
+            id: hostUserId,
+            name: 'Host',
+            avatar: 'HO',
+            role: 'host',
+            isMuted: false,
+            isSpeaking: false,
+            isHandRaised: false,
+            isAacUser: false,
+            volume: 100,
+            joinedAt: Date.now(),
+          },
+        ],
+      };
+      serverRoomsMap.set(roomId, room);
     }
 
     // Verify host permission

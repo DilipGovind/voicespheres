@@ -42,7 +42,7 @@ export function SwitchAccessOverlay() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 left-4 z-50 flex items-center space-x-3 rtl:space-x-reverse p-3 rounded-2xl bg-zinc-950/95 border-2 border-sky-400 text-white shadow-2xl backdrop-blur-md"
+      className="fixed bottom-4 left-4 rtl:left-auto rtl:right-4 z-50 flex items-center space-x-3 rtl:space-x-reverse p-3 rounded-2xl bg-zinc-950/95 border-2 border-sky-400 text-white shadow-2xl backdrop-blur-md"
     >
       <div className="flex items-center space-x-2 rtl:space-x-reverse">
         <div className={`w-3 h-3 rounded-full ${isSwitchScanActive ? 'bg-emerald-400 animate-ping' : 'bg-zinc-600'}`} />

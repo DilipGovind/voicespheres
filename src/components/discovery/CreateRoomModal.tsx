@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
 import { useI18n } from '@/lib/i18n-context';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { Room, RoomCategory, ROOM_CATEGORIES_INFO } from '@/types/room';
 import { SUPPORTED_LOCALES, SupportedLocale } from '@/types/i18n';
 import {
@@ -54,6 +55,8 @@ export function CreateRoomModal({
   // Content warnings
   const [hasContentWarning, setHasContentWarning] = useState(false);
   const [warningDescription, setWarningDescription] = useState('');
+
+  useModalDismiss(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -122,12 +125,17 @@ export function CreateRoomModal({
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="create-room-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
     >
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border-2 border-blue-500 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-room-title"
+        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border-2 border-blue-500 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/90">
           <div className="flex items-center space-x-2.5 rtl:space-x-reverse">

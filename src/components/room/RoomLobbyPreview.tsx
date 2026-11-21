@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { Room } from '@/types/room';
 import { AudioMeter } from '@/lib/audio-meter';
 import { serializeRoomToUrl } from '@/lib/room-serializer';
@@ -44,6 +45,8 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
   const currentCount = room.participants?.length || 0;
   const isFull = currentCount >= maxParticipants;
   const isLocked = !!(room as any).isLocked;
+
+  useModalDismiss(true, onCancel);
 
   const handleCopyLink = async () => {
     try {
@@ -120,12 +123,17 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="lobby-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
     >
-      <div className="relative w-full max-w-xl rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-6 sm:p-8 text-zinc-100 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lobby-title"
+        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-4 sm:p-8 text-zinc-100 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div>
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -310,7 +318,7 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
           <div className="flex items-center space-x-2">
             <button
               type="button"
@@ -334,7 +342,7 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
             type="button"
             onClick={handleJoin}
             disabled={(room.contentWarning?.enabled && !contentWarningAccepted) || isLocked || isFull}
-            className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition"
+            className="flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition"
           >
             <span>{settings.simpleLanguageMode ? 'Enter Room' : 'Join Voice Room'}</span>
             <ArrowRight className="w-4 h-4" />

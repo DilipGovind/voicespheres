@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { AACSpeechEngine } from '@/lib/aac-speech-engine';
 import {
   MANDATORY_AAC_PHRASES,
@@ -87,6 +88,8 @@ export function AacToolbarModal({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, selectedVoice, previewMode, settings.aacSpeed, settings.aacPitch]);
+
+  useModalDismiss(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -175,12 +178,17 @@ export function AacToolbarModal({
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="aac-toolkit-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto"
     >
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border-2 border-emerald-400 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="aac-toolkit-title"
+        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border-2 border-emerald-400 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/90">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">

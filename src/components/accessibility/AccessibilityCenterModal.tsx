@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
 import { useI18n } from '@/lib/i18n-context';
+import { useModalDismiss } from '@/hooks/useModalDismiss';
 import { PresetSelector } from './PresetSelector';
 import {
   X,
@@ -29,6 +30,13 @@ export function AccessibilityCenterModal({ isOpen, onClose }: AccessibilityCente
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabType>('presets');
 
+  const handleClose = () => {
+    onClose();
+    announce('Accessibility Center closed.', 'polite');
+  };
+
+  useModalDismiss(isOpen, handleClose);
+
   if (!isOpen) return null;
 
   const handleReset = () => {
@@ -36,19 +44,19 @@ export function AccessibilityCenterModal({ isOpen, onClose }: AccessibilityCente
     announce('All accessibility settings have been reset to default values.', 'assertive');
   };
 
-  const handleClose = () => {
-    onClose();
-    announce('Accessibility Center closed.', 'polite');
-  };
-
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="a11y-center-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-sm overflow-y-auto"
     >
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border-2 border-yellow-400 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="a11y-center-title"
+        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border-2 border-yellow-400 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden"
+      >
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/90">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
@@ -78,7 +86,7 @@ export function AccessibilityCenterModal({ isOpen, onClose }: AccessibilityCente
         <div
           role="tablist"
           aria-label="Accessibility setting categories"
-          className="flex overflow-x-auto border-b border-zinc-800 bg-zinc-900/50 p-2 gap-1.5 scrollbar-thin"
+          className="flex w-full max-w-full overflow-x-auto border-b border-zinc-800 bg-zinc-900/50 p-2 gap-1.5 scrollbar-thin"
         >
           <button
             role="tab"
