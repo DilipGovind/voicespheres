@@ -64,6 +64,13 @@ export const roomsSyncMap: Map<string, RoomSyncState> = g.__voicesphere_sync_map
 // Cloudflare KV Store Helper (for multi-datacenter edge persistence on Cloudflare Pages)
 export async function getCloudflareKv(): Promise<any | null> {
   try {
+    const symbolKey = Symbol.for('__cloudflare-request-context__');
+    const cfContext = (globalThis as any)?.[symbolKey];
+    if (cfContext?.env?.VOICESPHERE_KV) {
+      return cfContext.env.VOICESPHERE_KV;
+    }
+  } catch {}
+  try {
     const envKv = (process.env as any)?.VOICESPHERE_KV || (globalThis as any)?.VOICESPHERE_KV;
     if (envKv && typeof envKv.get === 'function') return envKv;
   } catch {}

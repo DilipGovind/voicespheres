@@ -132,7 +132,14 @@ if (!g.__voicesphere_users_map) {
 export const serverUsersMap: Map<string, ServerUserRecord> = g.__voicesphere_users_map;
 
 // Cloudflare KV Store Helper
-async function getCloudflareKv(): Promise<any | null> {
+export async function getCloudflareKv(): Promise<any | null> {
+  try {
+    const symbolKey = Symbol.for('__cloudflare-request-context__');
+    const cfContext = (globalThis as any)?.[symbolKey];
+    if (cfContext?.env?.VOICESPHERE_KV) {
+      return cfContext.env.VOICESPHERE_KV;
+    }
+  } catch {}
   try {
     const envKv = (process.env as any)?.VOICESPHERE_KV || (globalThis as any)?.VOICESPHERE_KV;
     if (envKv && typeof envKv.get === 'function') return envKv;

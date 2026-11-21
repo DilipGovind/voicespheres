@@ -4,6 +4,7 @@ import {
   serverRoomsMap,
   registerServerRoom,
   getRoomsWithLiveParticipants,
+  getCloudflareKv,
 } from '@/lib/server-rooms';
 
 export const runtime = 'edge';
@@ -11,6 +12,22 @@ export const runtime = 'edge';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const roomId = searchParams.get('id');
+
+  // Hydrate custom rooms from Cloudflare KV if bound in production Pages
+  try {
+    const kv = await getCloudflareKv();
+    if (kv) {
+      const raw = await kv.get('community_rooms');
+      if (raw) {
+        const customRooms: Room[] = JSON.parse(raw);
+        if (Array.isArray(customRooms)) {
+          customRooms.forEach((r) => {
+            if (r && r.id) serverRoomsMap.set(r.id, r);
+          });
+        }
+      }
+    }
+  } catch {}
 
   const allRooms = getRoomsWithLiveParticipants();
 
