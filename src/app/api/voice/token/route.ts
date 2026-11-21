@@ -95,8 +95,15 @@ export async function POST(request: Request) {
     const apiKey = process.env.LIVEKIT_API_KEY;
     const apiSecret = process.env.LIVEKIT_API_SECRET;
 
-    // If LiveKit credentials exist, generate a secure short-lived token
-    if (livekitUrl && apiKey && apiSecret) {
+    // Validate LiveKit credentials: apiSecret must be a raw secret key, not a pre-generated JWT token
+    const isSecretValid =
+      Boolean(apiSecret) &&
+      !apiSecret!.startsWith('ey') &&
+      apiSecret!.split('.').length !== 3 &&
+      apiSecret!.length >= 8;
+
+    // If LiveKit credentials exist and secret is valid, generate a secure short-lived token
+    if (livekitUrl && apiKey && isSecretValid) {
       const at = new AccessToken(apiKey, apiSecret, {
         identity: userId,
         name: userName,
