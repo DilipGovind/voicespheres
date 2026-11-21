@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
+import { useAuth } from '@/lib/auth-context';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
-import { User, Shield, Download, Trash2, X, Check, Lock } from 'lucide-react';
+import { User, Shield, Download, Trash2, X, Check, Lock, Coins, Sparkles, LogIn } from 'lucide-react';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -19,21 +20,29 @@ export function UserProfileModal({
   onUpdateName,
 }: UserProfileModalProps) {
   const { settings, resetDefaults, announce } = useAccessibility();
-  const [displayName, setDisplayName] = useState(currentName);
-  const [pronouns, setPronouns] = useState('');
-  const [bio, setBio] = useState('');
+  const { user, updateProfile, openAuthModal, logout } = useAuth();
+  const [displayName, setDisplayName] = useState(user?.displayName || currentName);
+  const [pronouns, setPronouns] = useState(user?.pronouns || '');
+  const [bio, setBio] = useState(user?.bio || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedPronouns = localStorage.getItem('voicesphere_pronouns');
-      const savedBio = localStorage.getItem('voicesphere_bio');
-      if (savedPronouns) setPronouns(savedPronouns);
-      if (savedBio) setBio(savedBio);
-    } catch {
-      // ignore
+    if (user) {
+      setDisplayName(user.displayName);
+      setPronouns(user.pronouns || '');
+      setBio(user.bio || '');
+    } else {
+      setDisplayName(currentName);
+      try {
+        const savedPronouns = localStorage.getItem('voicesphere_pronouns');
+        const savedBio = localStorage.getItem('voicesphere_bio');
+        if (savedPronouns) setPronouns(savedPronouns);
+        if (savedBio) setBio(savedBio);
+      } catch {
+        // ignore
+      }
     }
-  }, []);
+  }, [user, currentName, isOpen]);
 
   useModalDismiss(isOpen, onClose);
 
@@ -43,6 +52,13 @@ export function UserProfileModal({
     e.preventDefault();
     if (displayName.trim()) {
       onUpdateName(displayName.trim());
+      if (user) {
+        updateProfile({
+          displayName: displayName.trim(),
+          pronouns: pronouns.trim(),
+          bio: bio.trim(),
+        });
+      }
       try {
         localStorage.setItem('voicesphere_username', displayName.trim());
         localStorage.setItem('voicesphere_pronouns', pronouns.trim());
@@ -55,7 +71,7 @@ export function UserProfileModal({
       setTimeout(() => {
         setSavedSuccess(false);
         onClose();
-      }, 1000);
+      }, 800);
     }
   };
 
@@ -107,15 +123,22 @@ export function UserProfileModal({
       >
         <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
           <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
-            <div className="p-2 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-200">
-              <User className="w-5 h-5" />
+            <div className="p-2 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-200 text-lg">
+              {user?.avatar || <User className="w-5 h-5" />}
             </div>
             <div>
-              <h2 id="profile-title" className="text-lg font-black text-white">
-                Pseudonymous Profile & Privacy
-              </h2>
+              <div className="flex items-center space-x-2">
+                <h2 id="profile-title" className="text-lg font-black text-white">
+                  {user ? user.displayName : 'Pseudonymous Profile'}
+                </h2>
+                {user && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                    {user.role}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-zinc-400">
-                Zero required real names or personal identifiers
+                {user ? `@${user.username} • 🪙 ${user.coinsBalance} Coins` : 'Zero tracking, privacy-first local identity'}
               </p>
             </div>
           </div>
@@ -128,6 +151,26 @@ export function UserProfileModal({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {!user && (
+          <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <p className="text-xs font-bold text-blue-300">Currently Browsing as Guest</p>
+              <p className="text-[11px] text-zinc-400">Sign in or register to sync your rooms, AAC phrases, and coins across devices.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                openAuthModal('login');
+              }}
+              className="flex-shrink-0 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center space-x-1"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSave} className="space-y-4">
           <div>

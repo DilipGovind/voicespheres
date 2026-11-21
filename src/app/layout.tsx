@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AccessibilityProvider } from '@/lib/accessibility-context';
 import { I18nProvider } from '@/lib/i18n-context';
+import { AuthProvider } from '@/lib/auth-context';
 import { ScreenReaderLiveRegion } from '@/components/accessibility/ScreenReaderLiveRegion';
 import { SwitchAccessOverlay } from '@/components/accessibility/SwitchAccessOverlay';
 import { DyslexiaRuler } from '@/components/accessibility/DyslexiaRuler';
@@ -32,16 +33,18 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-yellow-400 selection:text-black">
         <AccessibilityProvider>
           <I18nProvider>
-            {/* Screen Reader Live Region (NVDA, JAWS, VoiceOver, TalkBack) */}
-            <ScreenReaderLiveRegion />
+            <AuthProvider>
+              {/* Screen Reader Live Region (NVDA, JAWS, VoiceOver, TalkBack) */}
+              <ScreenReaderLiveRegion />
 
-            {/* Switch Access Overlay */}
-            <SwitchAccessOverlay />
+              {/* Switch Access Overlay */}
+              <SwitchAccessOverlay />
 
-            {/* Reading Guide Ruler for Dyslexia */}
-            <DyslexiaRuler />
+              {/* Reading Guide Ruler for Dyslexia */}
+              <DyslexiaRuler />
 
-            {children}
+              {children}
+            </AuthProvider>
           </I18nProvider>
         </AccessibilityProvider>
       </body>
