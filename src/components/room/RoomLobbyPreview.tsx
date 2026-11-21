@@ -132,7 +132,7 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
         role="dialog"
         aria-modal="true"
         aria-labelledby="lobby-title"
-        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-4 sm:p-8 text-zinc-100 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl mx-auto rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-4 sm:p-8 text-zinc-100 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto overflow-x-hidden"
       >
         {/* Header */}
         <div>
@@ -318,12 +318,12 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2">
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold transition"
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold transition"
             >
               Cancel
             </button>
@@ -331,7 +331,7 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
               type="button"
               onClick={handleCopyLink}
               aria-label="Copy room invite link"
-              className="flex items-center space-x-1 px-3 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-yellow-300 text-xs sm:text-sm font-semibold transition"
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-1 px-3 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-yellow-300 text-xs sm:text-sm font-semibold transition"
             >
               {copiedLink ? <Check className="w-4 h-4 stroke-[3]" /> : <Share2 className="w-4 h-4" />}
               <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
@@ -342,7 +342,7 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
             type="button"
             onClick={handleJoin}
             disabled={(room.contentWarning?.enabled && !contentWarningAccepted) || isLocked || isFull}
-            className="flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition"
           >
             <span>{settings.simpleLanguageMode ? 'Enter Room' : 'Join Voice Room'}</span>
             <ArrowRight className="w-4 h-4" />

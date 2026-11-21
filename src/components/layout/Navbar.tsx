@@ -49,7 +49,7 @@ export function Navbar({
         Skip to main accessible content
       </a>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full overflow-hidden">
         {/* Brand */}
         <div className="flex items-center space-x-2.5 sm:space-x-3 rtl:space-x-reverse min-w-0">
           <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20">
@@ -71,7 +71,7 @@ export function Navbar({
         </div>
 
         {/* Actions & Accessibility Bar */}
-        <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 rtl:space-x-reverse flex-shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 rtl:space-x-reverse">
           {/* Desktop-only secondary controls */}
           <div className="hidden md:flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
             {/* Demo Trial & Coins Shortcut */}
@@ -178,16 +178,16 @@ export function Navbar({
             </span>
           </button>
 
-          {/* Create Room Button (Visible across all viewports when not in room) */}
+          {/* Create Room Button (Visible on sm+ viewports when not in room) */}
           {!inRoom && (
             <button
               type="button"
               onClick={onCreateRoom}
               aria-label={settings.simpleLanguageMode ? 'Create New Voice Room' : t('createRoom')}
-              className="flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/30 focus:ring-4 focus:ring-blue-400 transition"
+              className="hidden sm:flex items-center space-x-1 sm:space-x-1.5 rtl:space-x-reverse px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/30 focus:ring-4 focus:ring-blue-400 transition"
             >
               <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden sm:inline">
+              <span className="hidden md:inline">
                 {settings.simpleLanguageMode ? 'Start Room' : t('createRoom')}
               </span>
             </button>
@@ -213,6 +213,20 @@ export function Navbar({
           aria-label="Mobile Navigation Menu"
           className="md:hidden border-t border-zinc-800 bg-zinc-950 p-4 space-y-3 shadow-2xl animate-in slide-in-from-top-2 duration-200"
         >
+          {!inRoom && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onCreateRoom();
+              }}
+              className="w-full flex items-center justify-center space-x-2 p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition mb-1"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{settings.simpleLanguageMode ? 'Start Room' : t('createRoom')}</span>
+            </button>
+          )}
+
           <div className="grid grid-cols-2 gap-2">
             {onOpenProfile && (
               <button
