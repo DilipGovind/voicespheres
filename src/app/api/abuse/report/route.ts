@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { ReportItem } from '@/types/room';
 
+export const runtime = 'edge';
+
 // Ephemeral in-memory store for prototype abuse reports
 const reportsLog: ReportItem[] = [];
 

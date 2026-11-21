@@ -1,66 +1,22 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
 import { Room } from '@/types/room';
-import { INITIAL_COMMUNITY_ROOMS } from '@/lib/mock-rooms';
+import { serverRoomsMap } from '@/lib/server-rooms';
 
-// In-memory room storage
-const globalRoomsMap = new Map<string, Room>();
-
-// Seed initial rooms
-INITIAL_COMMUNITY_ROOMS.forEach((room) => {
-  globalRoomsMap.set(room.id, room);
-});
-
-// Cache file path in temporary storage
-const TMP_FILE = path.join(os.tmpdir(), 'voicesphere_created_rooms.json');
-
-function hydrateFromTmp() {
-  try {
-    if (fs.existsSync(TMP_FILE)) {
-      const data = fs.readFileSync(TMP_FILE, 'utf8');
-      const parsed: Room[] = JSON.parse(data);
-      if (Array.isArray(parsed)) {
-        parsed.forEach((r) => {
-          if (r && r.id) {
-            globalRoomsMap.set(r.id, r);
-          }
-        });
-      }
-    }
-  } catch {
-    // ignore
-  }
-}
-
-function persistToTmp() {
-  try {
-    const list = Array.from(globalRoomsMap.values());
-    fs.writeFileSync(TMP_FILE, JSON.stringify(list), 'utf8');
-  } catch {
-    // ignore
-  }
-}
-
-// Initial hydration
-hydrateFromTmp();
+export const runtime = 'edge';
 
 export async function GET(request: Request) {
-  hydrateFromTmp();
-
   const { searchParams } = new URL(request.url);
   const roomId = searchParams.get('id');
 
   if (roomId) {
-    const room = globalRoomsMap.get(roomId);
+    const room = serverRoomsMap.get(roomId);
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
     return NextResponse.json({ status: 'ok', room });
   }
 
-  const allRooms = Array.from(globalRoomsMap.values()).sort(
+  const allRooms = Array.from(serverRoomsMap.values()).sort(
     (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
   );
 
@@ -83,11 +39,9 @@ export async function POST(request: Request) {
       );
     }
 
-    hydrateFromTmp();
-    globalRoomsMap.set(newRoom.id, newRoom);
-    persistToTmp();
+    serverRoomsMap.set(newRoom.id, newRoom);
 
-    const allRooms = Array.from(globalRoomsMap.values()).sort(
+    const allRooms = Array.from(serverRoomsMap.values()).sort(
       (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
     );
 
@@ -100,10 +54,10 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (err) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: 'Invalid room payload' },
-      { status: 400 }
+      { error: error?.message || 'Error creating room' },
+      { status: 500 }
     );
   }
 }

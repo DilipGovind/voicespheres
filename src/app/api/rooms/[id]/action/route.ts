@@ -1,37 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Room, Participant } from '@/types/room';
-import { INITIAL_COMMUNITY_ROOMS } from '@/lib/mock-rooms';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import { serverRoomsMap } from '@/lib/server-rooms';
 
-const globalRoomsMap = new Map<string, Room>();
-INITIAL_COMMUNITY_ROOMS.forEach((r) => globalRoomsMap.set(r.id, r));
-
-const TMP_FILE = path.join(os.tmpdir(), 'voicesphere_created_rooms.json');
-
-function hydrateRooms() {
-  try {
-    if (fs.existsSync(TMP_FILE)) {
-      const data = fs.readFileSync(TMP_FILE, 'utf8');
-      const parsed: Room[] = JSON.parse(data);
-      if (Array.isArray(parsed)) {
-        parsed.forEach((r) => {
-          if (r && r.id) {
-            globalRoomsMap.set(r.id, r);
-          }
-        });
-      }
-    }
-  } catch {}
-}
-
-function persistRooms() {
-  try {
-    const list = Array.from(globalRoomsMap.values());
-    fs.writeFileSync(TMP_FILE, JSON.stringify(list), 'utf8');
-  } catch {}
-}
+export const runtime = 'edge';
 
 // In-memory rate limiting map: ipOrUser -> timestamp[]
 const rateLimits = new Map<string, number[]>();
@@ -49,8 +20,6 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    hydrateRooms();
-
     const roomId = params.id;
     const body = await request.json();
     const { hostUserId, action, targetUserId, newRole } = body;
@@ -69,12 +38,12 @@ export async function POST(
       );
     }
 
-    const room = globalRoomsMap.get(roomId);
+    const room = serverRoomsMap.get(roomId);
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
-    // Verify host permission: either hostId matches or user has 'host' / 'moderator' role in participants
+    // Verify host permission
     const hostParticipant = room.participants?.find((p) => p.id === hostUserId);
     const isAuthorized =
       room.hostId === hostUserId ||
@@ -145,8 +114,6 @@ export async function POST(
       default:
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
-
-    persistRooms();
 
     return NextResponse.json({
       status: 'ok',

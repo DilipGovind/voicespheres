@@ -1,40 +1,14 @@
 import { NextResponse } from 'next/server';
 import { AccessToken } from 'livekit-server-sdk';
-import { Room } from '@/types/room';
-import { INITIAL_COMMUNITY_ROOMS } from '@/lib/mock-rooms';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import { serverRoomsMap } from '@/lib/server-rooms';
+
+export const runtime = 'edge';
 
 // Maximum capacity for small-group worldwide testing
 const DEFAULT_MAX_PARTICIPANTS = 12;
 
-// In-memory room storage matching /api/rooms
-const globalRoomsMap = new Map<string, Room>();
-INITIAL_COMMUNITY_ROOMS.forEach((r) => globalRoomsMap.set(r.id, r));
-
-const TMP_FILE = path.join(os.tmpdir(), 'voicesphere_created_rooms.json');
-
-function hydrateRooms() {
-  try {
-    if (fs.existsSync(TMP_FILE)) {
-      const data = fs.readFileSync(TMP_FILE, 'utf8');
-      const parsed: Room[] = JSON.parse(data);
-      if (Array.isArray(parsed)) {
-        parsed.forEach((r) => {
-          if (r && r.id) {
-            globalRoomsMap.set(r.id, r);
-          }
-        });
-      }
-    }
-  } catch {}
-}
-
 export async function POST(request: Request) {
   try {
-    hydrateRooms();
-
     const body = await request.json();
     const { roomId, userId, userName, role = 'speaker', passcode } = body;
 
@@ -45,7 +19,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const room = globalRoomsMap.get(roomId);
+    const room = serverRoomsMap.get(roomId);
 
     // If room is known, validate room-level permissions
     if (room) {

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Participant, LiveCaptionItem, ChatMessageItem } from '@/types/room';
 
+export const runtime = 'edge';
+
 interface RoomSyncState {
   participants: Map<string, Participant & { lastSeen: number }>;
   recentCaptions: LiveCaptionItem[];
@@ -10,7 +12,7 @@ interface RoomSyncState {
   lastUpdated: number;
 }
 
-// In-memory room sync store (per serverless container instance)
+// In-memory room sync store (per edge instance)
 const roomsSyncMap = new Map<string, RoomSyncState>();
 
 function getOrCreateRoomSync(roomId: string): RoomSyncState {
@@ -49,16 +51,9 @@ export async function GET(request: Request) {
   const state = getOrCreateRoomSync(roomId);
   pruneStaleParticipants(state);
 
-  const participantsList: Participant[] = [];
-  state.participants.forEach((p) => {
-    const { lastSeen, ...rest } = p;
-    participantsList.push(rest);
-  });
-
   return NextResponse.json({
     status: 'ok',
-    roomId,
-    participants: participantsList,
+    participants: Array.from(state.participants.values()),
     recentCaptions: state.recentCaptions.slice(-20),
     recentChat: state.recentChat.slice(-30),
     currentStage: state.currentStage,
@@ -70,55 +65,46 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { roomId, user, action, eventData } = body;
+    const { roomId, user, action, caption, chatMessage, stage, activeSpeakerId } = body;
 
     if (!roomId) {
       return NextResponse.json({ error: 'Missing roomId' }, { status: 400 });
     }
 
     const state = getOrCreateRoomSync(roomId);
+    state.lastUpdated = Date.now();
 
-    // Update user heartbeat/presence
     if (user && user.id) {
       if (action === 'leave') {
         state.participants.delete(user.id);
       } else {
-        state.participants.set(user.id, {
-          ...user,
-          lastSeen: Date.now(),
-        });
+        state.participants.set(user.id, { ...user, lastSeen: Date.now() });
       }
     }
 
-    // Process eventData if provided
-    if (eventData) {
-      if (eventData.type === 'caption:new' && eventData.caption) {
-        state.recentCaptions.push(eventData.caption);
-        if (state.recentCaptions.length > 50) state.recentCaptions.shift();
-      } else if (eventData.type === 'chat:message' && eventData.message) {
-        state.recentChat.push(eventData.message);
-        if (state.recentChat.length > 50) state.recentChat.shift();
-      } else if (eventData.type === 'stage:change' && eventData.stage) {
-        state.currentStage = eventData.stage;
-        state.activeSpeakerId = eventData.activeSpeakerId ?? null;
-      }
+    if (caption) {
+      state.recentCaptions.push(caption);
+      if (state.recentCaptions.length > 50) state.recentCaptions.shift();
     }
+
+    if (chatMessage) {
+      state.recentChat.push(chatMessage);
+      if (state.recentChat.length > 50) state.recentChat.shift();
+    }
+
+    if (stage) state.currentStage = stage;
+    if (activeSpeakerId !== undefined) state.activeSpeakerId = activeSpeakerId;
 
     pruneStaleParticipants(state);
 
-    const participantsList: Participant[] = [];
-    state.participants.forEach((p) => {
-      const { lastSeen, ...rest } = p;
-      participantsList.push(rest);
-    });
-
     return NextResponse.json({
       status: 'ok',
-      roomId,
-      participants: participantsList,
-      timestamp: Date.now(),
+      participantsCount: state.participants.size,
+      participants: Array.from(state.participants.values()),
+      recentCaptions: state.recentCaptions.slice(-20),
+      recentChat: state.recentChat.slice(-30),
     });
-  } catch (err) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Sync error' }, { status: 500 });
   }
 }
