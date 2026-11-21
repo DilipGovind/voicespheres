@@ -14,6 +14,9 @@ import {
   LogOut,
   ShieldAlert,
   Share2,
+  ShieldCheck,
+  Bot,
+  Coins,
 } from 'lucide-react';
 
 interface ControlsBarProps {
@@ -23,6 +26,8 @@ interface ControlsBarProps {
   chatOpen: boolean;
   aacOpen: boolean;
   isSpeaker: boolean;
+  isHost?: boolean;
+  isAiEnabled?: boolean;
   onToggleMute: () => void;
   onToggleHand: () => void;
   onToggleCaptions: () => void;
@@ -30,6 +35,9 @@ interface ControlsBarProps {
   onToggleAAC: () => void;
   onOpenAccessibility: () => void;
   onOpenReport: () => void;
+  onOpenHostControls?: () => void;
+  onToggleAiCompanion?: () => void;
+  onOpenCoins?: () => void;
   onShareRoom?: () => void;
   onLeaveRoom: () => void;
 }
@@ -41,6 +49,8 @@ export function ControlsBar({
   chatOpen,
   aacOpen,
   isSpeaker,
+  isHost,
+  isAiEnabled,
   onToggleMute,
   onToggleHand,
   onToggleCaptions,
@@ -48,6 +58,9 @@ export function ControlsBar({
   onToggleAAC,
   onOpenAccessibility,
   onOpenReport,
+  onOpenHostControls,
+  onToggleAiCompanion,
+  onOpenCoins,
   onShareRoom,
   onLeaveRoom,
 }: ControlsBarProps) {
@@ -60,7 +73,7 @@ export function ControlsBar({
       aria-label="Room Controls Toolbar"
       className="sticky bottom-0 z-30 w-full border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-md py-3 px-4 sm:px-6"
     >
-      <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
         {/* Left: Audio & Voice Controls */}
         <div className="flex items-center space-x-2 rtl:space-x-reverse flex-wrap">
           {/* Mic Toggle (Only if speaker or host) */}
@@ -111,7 +124,7 @@ export function ControlsBar({
           </button>
         </div>
 
-        {/* Center: Accessibility Features (Captions, Chat, Accessibility Center) */}
+        {/* Center: Accessibility & Features */}
         <div className="flex items-center space-x-2 rtl:space-x-reverse flex-wrap">
           {/* Captions Toggle */}
           <button
@@ -144,6 +157,57 @@ export function ControlsBar({
             <MessageCircle className="w-5 h-5" />
             <span className="hidden md:inline">Chat</span>
           </button>
+
+          {/* Optional AI Voice Companion Toggle */}
+          {onToggleAiCompanion && (
+            <button
+              type="button"
+              onClick={onToggleAiCompanion}
+              aria-label={
+                isAiEnabled
+                  ? 'Disable optional AI Voice Companion'
+                  : 'Enable optional AI Voice Companion (Demo)'
+              }
+              title={
+                isAiEnabled
+                  ? 'AI Voice Companion Active (Demo)'
+                  : 'Optional AI Voice Companion (Disabled by default)'
+              }
+              className={`p-2.5 rounded-2xl border-2 transition ${
+                isAiEnabled
+                  ? 'bg-purple-600 text-white border-purple-400 shadow-md'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-purple-400 border-zinc-700'
+              }`}
+            >
+              <Bot className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Demo Trial & Coins Button */}
+          {onOpenCoins && (
+            <button
+              type="button"
+              onClick={onOpenCoins}
+              aria-label="View 30-Day Trial & Demo Coins Balance"
+              title="Demo Trial & Coins (No Real Payments)"
+              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-yellow-400 border border-zinc-700 hover:border-yellow-400/50 transition"
+            >
+              <Coins className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Host Controls Trigger (If Host) */}
+          {isHost && onOpenHostControls && (
+            <button
+              type="button"
+              onClick={onOpenHostControls}
+              aria-label="Open Host Administration Controls"
+              title="Room Host Controls"
+              className="p-2.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-amber-400 border-2 border-amber-500/50 transition"
+            >
+              <ShieldCheck className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Share Room Button */}
           {onShareRoom && (

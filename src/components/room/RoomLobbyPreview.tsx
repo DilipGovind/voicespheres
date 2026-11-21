@@ -19,11 +19,13 @@ import {
   User,
   Share2,
   Copy,
+  Lock,
+  Users,
 } from 'lucide-react';
 
 interface RoomLobbyPreviewProps {
   room: Room;
-  onConfirmJoin: (options: { joinAsListener: boolean; displayName: string }) => void;
+  onConfirmJoin: (options: { joinAsListener: boolean; displayName: string; passcode?: string }) => void;
   onCancel: () => void;
 }
 
@@ -33,8 +35,15 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
   const [audioLevel, setAudioLevel] = useState(0);
   const [joinAsListenerOnly, setJoinAsListenerOnly] = useState(false);
   const [displayName, setDisplayName] = useState('InclusiveVoice');
+  const [passcode, setPasscode] = useState('');
+  const [passcodeError, setPasscodeError] = useState<string | null>(null);
   const [contentWarningAccepted, setContentWarningAccepted] = useState(!room.contentWarning?.enabled);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const maxParticipants = (room as any).maxParticipants || 12;
+  const currentCount = room.participants?.length || 0;
+  const isFull = currentCount >= maxParticipants;
+  const isLocked = !!(room as any).isLocked;
 
   const handleCopyLink = async () => {
     try {
@@ -49,7 +58,6 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
   };
 
   useEffect(() => {
-    // Generate pseudonymous default name if saved
     try {
       const savedName = localStorage.getItem('voicesphere_username');
       if (savedName) setDisplayName(savedName);
@@ -83,7 +91,31 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
       announce('Please review the content warning before joining.', 'assertive');
       return;
     }
-    onConfirmJoin({ joinAsListener: joinAsListenerOnly, displayName });
+
+    if (room.isPrivate) {
+      if (!passcode.trim()) {
+        setPasscodeError('Please enter the room passcode to join this private room.');
+        announce('Passcode required for private room', 'assertive');
+        return;
+      }
+      if (room.passcode && passcode.trim() !== room.passcode) {
+        setPasscodeError('Incorrect passcode. Please check with the room host.');
+        announce('Incorrect passcode', 'assertive');
+        return;
+      }
+    }
+
+    if (isLocked) {
+      announce('Room is locked by host.', 'assertive');
+      return;
+    }
+
+    if (isFull) {
+      announce('Room has reached maximum testing capacity.', 'assertive');
+      return;
+    }
+
+    onConfirmJoin({ joinAsListener: joinAsListenerOnly, displayName, passcode: passcode.trim() });
   };
 
   return (
@@ -93,12 +125,25 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
       aria-labelledby="lobby-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
     >
-      <div className="relative w-full max-w-xl rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-6 sm:p-8 text-zinc-100 shadow-2xl space-y-6">
+      <div className="relative w-full max-w-xl rounded-3xl border-2 border-zinc-700 bg-zinc-950 p-6 sm:p-8 text-zinc-100 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div>
-          <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
-            Room Preview & Onboarding
-          </span>
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+            <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
+              Room Preview & Onboarding
+            </span>
+            {room.isPrivate && (
+              <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center space-x-1">
+                <Lock className="w-3 h-3" />
+                <span>Private Room</span>
+              </span>
+            )}
+            <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 text-xs font-bold flex items-center space-x-1">
+              <Users className="w-3 h-3" />
+              <span>{currentCount}/{maxParticipants} Testers</span>
+            </span>
+          </div>
+
           <h2 id="lobby-title" className="text-2xl font-black text-white mt-2">
             {room.name}
           </h2>
@@ -106,6 +151,45 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
             {room.topic}
           </p>
         </div>
+
+        {/* Room Lock Warning */}
+        {isLocked && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 text-amber-200 text-xs flex items-center space-x-2">
+            <Lock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>This room has been locked by the host. New participants cannot join right now.</span>
+          </div>
+        )}
+
+        {/* Capacity Warning */}
+        {isFull && !isLocked && (
+          <div className="p-3.5 rounded-2xl bg-rose-500/10 border-2 border-rose-500/30 text-rose-200 text-xs flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+            <span>This room has reached its maximum testing capacity ({maxParticipants} participants).</span>
+          </div>
+        )}
+
+        {/* Private Room Passcode Input */}
+        {room.isPrivate && (
+          <div className="p-4 rounded-2xl bg-zinc-900 border-2 border-amber-500/40 space-y-2">
+            <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center space-x-1.5">
+              <Lock className="w-3.5 h-3.5" />
+              <span>Passcode Required to Enter</span>
+            </label>
+            <input
+              type="password"
+              value={passcode}
+              onChange={(e) => {
+                setPasscode(e.target.value);
+                setPasscodeError(null);
+              }}
+              placeholder="Enter room passcode..."
+              className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white font-mono text-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+            />
+            {passcodeError && (
+              <p className="text-xs text-rose-400 font-semibold">{passcodeError}</p>
+            )}
+          </div>
+        )}
 
         {/* Content Warning Notice */}
         {room.contentWarning?.enabled && (
@@ -249,7 +333,7 @@ export function RoomLobbyPreview({ room, onConfirmJoin, onCancel }: RoomLobbyPre
           <button
             type="button"
             onClick={handleJoin}
-            disabled={room.contentWarning?.enabled && !contentWarningAccepted}
+            disabled={(room.contentWarning?.enabled && !contentWarningAccepted) || isLocked || isFull}
             className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition"
           >
             <span>{settings.simpleLanguageMode ? 'Enter Room' : 'Join Voice Room'}</span>

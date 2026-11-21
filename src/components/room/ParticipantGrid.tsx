@@ -12,6 +12,9 @@ import {
   Volume2,
   VolumeX,
   MoreVertical,
+  Coins,
+  Ban,
+  UserCheck,
 } from 'lucide-react';
 
 interface ParticipantGridProps {
@@ -22,7 +25,10 @@ interface ParticipantGridProps {
   onChangeRole?: (userId: string, role: ParticipantRole) => void;
   onKickUser?: (userId: string) => void;
   onTogglePersonalMute?: (userId: string) => void;
+  onBlockUser?: (userId: string) => void;
+  onTipUser?: (recipientId: string, recipientName: string) => void;
   personallyMutedUserIds?: Set<string>;
+  blockedUserIds?: Set<string>;
   activeSpeakerId?: string | null;
 }
 
@@ -34,13 +40,21 @@ export function ParticipantGrid({
   onChangeRole,
   onKickUser,
   onTogglePersonalMute,
+  onBlockUser,
+  onTipUser,
   personallyMutedUserIds = new Set(),
+  blockedUserIds = new Set(),
   activeSpeakerId,
 }: ParticipantGridProps) {
-  const { settings, announce } = useAccessibility();
+  const { settings } = useAccessibility();
 
-  const speakers = participants.filter((p) => p.role === 'host' || p.role === 'moderator' || p.role === 'speaker');
-  const listeners = participants.filter((p) => p.role === 'listener');
+  // Filter out blocked users from view if desired, or show them with blocked banner
+  const visibleParticipants = participants.filter((p) => !blockedUserIds.has(p.id));
+
+  const speakers = visibleParticipants.filter(
+    (p) => p.role === 'host' || p.role === 'moderator' || p.role === 'speaker'
+  );
+  const listeners = visibleParticipants.filter((p) => p.role === 'listener');
 
   return (
     <div className="space-y-6">
@@ -68,6 +82,8 @@ export function ParticipantGrid({
               onChangeRole={onChangeRole}
               onKickUser={onKickUser}
               onTogglePersonalMute={onTogglePersonalMute}
+              onBlockUser={onBlockUser}
+              onTipUser={onTipUser}
             />
           ))}
         </div>
@@ -98,6 +114,8 @@ export function ParticipantGrid({
                 onChangeRole={onChangeRole}
                 onKickUser={onKickUser}
                 onTogglePersonalMute={onTogglePersonalMute}
+                onBlockUser={onBlockUser}
+                onTipUser={onTipUser}
               />
             ))}
           </div>
@@ -117,6 +135,8 @@ interface ParticipantCardProps {
   onChangeRole?: (userId: string, role: ParticipantRole) => void;
   onKickUser?: (userId: string) => void;
   onTogglePersonalMute?: (userId: string) => void;
+  onBlockUser?: (userId: string) => void;
+  onTipUser?: (recipientId: string, recipientName: string) => void;
 }
 
 function ParticipantCard({
@@ -129,6 +149,8 @@ function ParticipantCard({
   onChangeRole,
   onKickUser,
   onTogglePersonalMute,
+  onBlockUser,
+  onTipUser,
 }: ParticipantCardProps) {
   const { settings } = useAccessibility();
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -159,7 +181,7 @@ function ParticipantCard({
       {participant.isHandRaised && (
         <div
           aria-label="Hand raised to speak"
-          className="absolute -top-2 px-2 py-0.5 rounded-full bg-amber-400 text-black text-[11px] font-black flex items-center space-x-1 shadow-md"
+          className="absolute -top-2 px-2 py-0.5 rounded-full bg-amber-400 text-black text-[11px] font-black flex items-center space-x-1 shadow-md z-10"
         >
           <Hand className="w-3.5 h-3.5" />
           <span>Hand Raised</span>
@@ -227,13 +249,31 @@ function ParticipantCard({
         </div>
       </div>
 
-      {/* Quick Action Controls (Personal Mute & Mod Actions) */}
+      {/* Quick Action Controls (Tip, Personal Mute & Mod Actions) */}
       <div className="flex items-center space-x-1.5 rtl:space-x-reverse mt-2">
+        {/* Tip with demo coins */}
+        {!isSelf && onTipUser && (
+          <button
+            type="button"
+            onClick={() => onTipUser(participant.id, participant.name)}
+            aria-label={`Send 10 demo coins tip to ${participant.name}`}
+            className="p-1.5 rounded-lg border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs transition"
+            title="Send Demo Tip (10 coins)"
+          >
+            <Coins className="w-3.5 h-3.5" />
+          </button>
+        )}
+
+        {/* Personal Mute */}
         {!isSelf && onTogglePersonalMute && (
           <button
             type="button"
             onClick={() => onTogglePersonalMute(participant.id)}
-            aria-label={isPersonallyMuted ? `Unmute ${participant.name} for yourself` : `Personal mute for ${participant.name}`}
+            aria-label={
+              isPersonallyMuted
+                ? `Unmute ${participant.name} for yourself`
+                : `Personal mute for ${participant.name}`
+            }
             className={`p-1.5 rounded-lg border text-xs transition ${
               isPersonallyMuted
                 ? 'bg-red-500/20 text-red-400 border-red-500/50'
@@ -244,20 +284,34 @@ function ParticipantCard({
           </button>
         )}
 
-        {isHostOrMod && !isSelf && (
+        {/* More Actions Menu */}
+        {!isSelf && (
           <div className="relative">
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              aria-label={`Moderator options for ${participant.name}`}
+              aria-label={`Options for ${participant.name}`}
               className="p-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white"
             >
               <MoreVertical className="w-3.5 h-3.5" />
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 bottom-full mb-1 w-44 rounded-xl border border-zinc-700 bg-zinc-950 p-1.5 shadow-xl z-50 text-xs">
-                {onMuteUser && !participant.isMuted && (
+              <div className="absolute right-0 bottom-full mb-1 w-48 rounded-xl border border-zinc-700 bg-zinc-950 p-1.5 shadow-xl z-50 text-xs">
+                {onBlockUser && (
+                  <button
+                    onClick={() => {
+                      onBlockUser(participant.id);
+                      setMenuOpen(false);
+                    }}
+                    className="w-full text-left px-2 py-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 flex items-center space-x-1.5"
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    <span>Block Participant</span>
+                  </button>
+                )}
+
+                {isHostOrMod && onMuteUser && !participant.isMuted && (
                   <button
                     onClick={() => {
                       onMuteUser(participant.id);
@@ -270,7 +324,7 @@ function ParticipantCard({
                   </button>
                 )}
 
-                {onChangeRole && participant.role === 'listener' && (
+                {isHostOrMod && onChangeRole && participant.role === 'listener' && (
                   <button
                     onClick={() => {
                       onChangeRole(participant.id, 'speaker');
@@ -278,12 +332,12 @@ function ParticipantCard({
                     }}
                     className="w-full text-left px-2 py-1.5 rounded-lg text-zinc-200 hover:bg-zinc-800 flex items-center space-x-1.5"
                   >
-                    <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Invite to Speak</span>
                   </button>
                 )}
 
-                {onChangeRole && participant.role === 'speaker' && (
+                {isHostOrMod && onChangeRole && participant.role === 'speaker' && (
                   <button
                     onClick={() => {
                       onChangeRole(participant.id, 'listener');
@@ -296,7 +350,7 @@ function ParticipantCard({
                   </button>
                 )}
 
-                {onKickUser && (
+                {isHostOrMod && onKickUser && (
                   <button
                     onClick={() => {
                       onKickUser(participant.id);

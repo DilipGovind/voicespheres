@@ -12,12 +12,16 @@ import {
   Radio,
   BookOpen,
   User,
+  Coins,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenAccessibility: () => void;
   onCreateRoom: () => void;
   onOpenProfile?: () => void;
+  onOpenTrialCoins?: () => void;
+  onOpenPrivacy?: () => void;
   currentUserName?: string;
   inRoom?: boolean;
 }
@@ -26,6 +30,8 @@ export function Navbar({
   onOpenAccessibility,
   onCreateRoom,
   onOpenProfile,
+  onOpenTrialCoins,
+  onOpenPrivacy,
   currentUserName,
   inRoom = false,
 }: NavbarProps) {
@@ -63,6 +69,32 @@ export function Navbar({
 
         {/* Actions & Accessibility Bar */}
         <div className="flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
+          {/* Demo Trial & Coins Shortcut */}
+          {onOpenTrialCoins && (
+            <button
+              type="button"
+              onClick={onOpenTrialCoins}
+              aria-label="Open 30-Day Trial and Demo Coins"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 text-xs sm:text-sm font-bold transition focus-visible:ring-4 focus-visible:ring-yellow-400"
+            >
+              <Coins className="w-4 h-4 text-yellow-400" />
+              <span className="hidden md:inline">30d Demo Trial</span>
+            </button>
+          )}
+
+          {/* Privacy Notice Shortcut */}
+          {onOpenPrivacy && (
+            <button
+              type="button"
+              onClick={onOpenPrivacy}
+              aria-label="View Prototype Privacy Notice"
+              className="p-1.5 sm:p-2 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition"
+              title="Privacy Notice (No audio recording)"
+            >
+              <ShieldCheck className="w-4 h-4" />
+            </button>
+          )}
+
           {/* Language Selector (21 Languages) */}
           <div className="relative">
             <button

@@ -15,6 +15,8 @@ import { RoomLobbyPreview } from '@/components/room/RoomLobbyPreview';
 import { VoiceRoomView } from '@/components/room/VoiceRoomView';
 import { UserProfileModal } from '@/components/profile/UserProfileModal';
 import { ShareRoomModal } from '@/components/room/ShareRoomModal';
+import { TrialAndCoinsModal } from '@/components/payments/TrialAndCoinsModal';
+import { PrivacyNoticeModal } from '@/components/safety/PrivacyNoticeModal';
 import { deserializeRoomFromUrl } from '@/lib/room-serializer';
 import { realtimeClient } from '@/lib/socket-client';
 import {
@@ -30,6 +32,8 @@ import {
   Ear,
   Eye,
   User,
+  Coins,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function Home() {
@@ -77,6 +81,8 @@ export default function Home() {
   const [isA11yCenterOpen, setIsA11yCenterOpen] = useState(false);
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isTrialCoinsOpen, setIsTrialCoinsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [shareModalRoom, setShareModalRoom] = useState<Room | null>(null);
 
   // Sync URL query parameter without page reload
@@ -111,15 +117,13 @@ export default function Home() {
         setRooms(allCombinedRooms);
       }
 
-      // Check if URL contains direct room invite link or portable serialized parameters
+      // Check if URL contains direct room invite link
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const urlRoomId = params.get('room');
         if (urlRoomId) {
-          // 1. Try to deserialize directly from URL (works across ALL devices & mobile QR scans instantly!)
           const deserialized = deserializeRoomFromUrl(params, allCombinedRooms);
           if (deserialized) {
-            // Ensure room exists in discovery list
             setRooms((prev) => {
               if (prev.some((r) => r.id === deserialized.id)) return prev;
               return [deserialized, ...prev];
@@ -127,7 +131,6 @@ export default function Home() {
             setPreviewingRoom(deserialized);
             announce(`Loaded shared room: ${deserialized.name}`, 'polite');
           } else {
-            // 2. Fetch dynamically created room from server API route
             fetch(`/api/rooms?id=${encodeURIComponent(urlRoomId)}`)
               .then((res) => res.json())
               .then((data) => {
@@ -142,15 +145,12 @@ export default function Home() {
         }
       }
 
-      // Initial server rooms fetch
       fetchRoomsFromServer();
 
-      // Continuous background sync every 4.5 seconds for live room discovery across devices
       const syncInterval = setInterval(() => {
         fetchRoomsFromServer();
       }, 4500);
 
-      // Listen for real-time room creation broadcast from other devices
       const unsubRoomCreated = realtimeClient.on(
         'global:room_created',
         (payload: { room?: Room } | Room) => {
@@ -177,9 +177,7 @@ export default function Home() {
         clearInterval(syncInterval);
         unsubRoomCreated();
       };
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, []);
 
   const handleSelectRoom = (room: Room) => {
@@ -190,24 +188,30 @@ export default function Home() {
   const handleConfirmJoin = ({
     joinAsListener,
     displayName,
+    passcode,
   }: {
     joinAsListener: boolean;
     displayName: string;
+    passcode?: string;
   }) => {
     if (!previewingRoom) return;
     setCurrentUserName(displayName);
     setInitialRole(joinAsListener ? 'listener' : 'speaker');
-    setActiveRoom(previewingRoom);
+
+    const updatedRoom: Room = {
+      ...previewingRoom,
+      passcode: passcode || previewingRoom.passcode,
+    };
+
+    setActiveRoom(updatedRoom);
     updateUrlRoomParam(previewingRoom.id);
     setPreviewingRoom(null);
   };
 
   const handleCreateRoom = (newRoom: Room) => {
-    // 1. Add to local state
     const updated = [newRoom, ...rooms];
     setRooms(updated);
 
-    // 2. Persist in localStorage so unlimited rooms persist across sessions
     try {
       const existing = localStorage.getItem('voicesphere_user_rooms');
       const parsedList: Room[] = existing ? JSON.parse(existing) : [];
@@ -215,21 +219,15 @@ export default function Home() {
         'voicesphere_user_rooms',
         JSON.stringify([newRoom, ...parsedList.filter((r) => r.id !== newRoom.id)])
       );
-    } catch {
-      // ignore
-    }
+    } catch {}
 
-    // 3. Post to /api/rooms so all devices fetch this newly created room
     fetch('/api/rooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newRoom),
     }).catch(() => {});
 
-    // 4. Broadcast to global mesh across devices
     realtimeClient.broadcastRoomCreated(newRoom);
-
-    // 5. Set active and update URL query param
     setActiveRoom(newRoom);
     updateUrlRoomParam(newRoom.id);
     announce(`Created room: ${newRoom.name}. Accessible across all devices.`, 'polite');
@@ -251,6 +249,8 @@ export default function Home() {
           onOpenAccessibility={() => setIsA11yCenterOpen(true)}
           onCreateRoom={() => setIsCreateRoomOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
+          onOpenTrialCoins={() => setIsTrialCoinsOpen(true)}
+          onOpenPrivacy={() => setIsPrivacyOpen(true)}
           currentUserName={currentUserName}
           inRoom={true}
         />
@@ -268,6 +268,18 @@ export default function Home() {
           isOpen={isA11yCenterOpen}
           onClose={() => setIsA11yCenterOpen(false)}
         />
+
+        <TrialAndCoinsModal
+          isOpen={isTrialCoinsOpen}
+          onClose={() => setIsTrialCoinsOpen(false)}
+          userId={currentUserId}
+          userName={currentUserName}
+        />
+
+        <PrivacyNoticeModal
+          isOpen={isPrivacyOpen}
+          onClose={() => setIsPrivacyOpen(false)}
+        />
       </div>
     );
   }
@@ -279,6 +291,8 @@ export default function Home() {
         onOpenAccessibility={() => setIsA11yCenterOpen(true)}
         onCreateRoom={() => setIsCreateRoomOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
+        onOpenTrialCoins={() => setIsTrialCoinsOpen(true)}
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
         currentUserName={currentUserName}
         inRoom={false}
       />
@@ -324,11 +338,20 @@ export default function Home() {
 
               <button
                 type="button"
-                onClick={() => setIsProfileOpen(true)}
+                onClick={() => setIsTrialCoinsOpen(true)}
+                className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-3 rounded-2xl bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 font-bold text-sm transition"
+              >
+                <Coins className="w-4 h-4" />
+                <span>30-Day Demo Trial</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPrivacyOpen(true)}
                 className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-semibold text-sm transition"
               >
-                <User className="w-4 h-4" />
-                <span>My Profile ({currentUserName})</span>
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Privacy Notice</span>
               </button>
             </div>
           </div>
@@ -417,6 +440,20 @@ export default function Home() {
         onClose={() => setIsProfileOpen(false)}
         currentName={currentUserName}
         onUpdateName={(newName) => setCurrentUserName(newName)}
+      />
+
+      {/* Demo 30-Day Trial & Coins Modal */}
+      <TrialAndCoinsModal
+        isOpen={isTrialCoinsOpen}
+        onClose={() => setIsTrialCoinsOpen(false)}
+        userId={currentUserId}
+        userName={currentUserName}
+      />
+
+      {/* Privacy Notice Modal */}
+      <PrivacyNoticeModal
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
       />
     </div>
   );
