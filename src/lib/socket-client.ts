@@ -23,6 +23,7 @@ class RealtimeClient {
   private sessionId = 'session_' + Math.random().toString(36).substring(2, 11);
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private serverSyncInterval: NodeJS.Timeout | null = null;
+  private eventSource: EventSource | null = null;
   private seenMessageIds: Set<string> = new Set();
   private lastKnownCaptionsCount = 0;
   private lastKnownChatCount = 0;
@@ -150,6 +151,9 @@ class RealtimeClient {
     // Immediate registration with serverless sync hub
     this.syncRoomStateWithServer();
 
+    // Fast SSE real-time push stream connection (<50ms signaling)
+    this.initEventSourceStream(roomId, user.id);
+
     // Start periodic presence heartbeat every 1.5 seconds for instant multi-device presence
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     this.heartbeatInterval = setInterval(() => {
@@ -271,6 +275,50 @@ class RealtimeClient {
     this.publishMeshEvent('global:feedback_submitted', { feedback });
   }
 
+  /**
+   * Initialize Server-Sent Events (SSE) push stream for instant cross-device updates (<50ms)
+   */
+  private initEventSourceStream(roomId: string, userId: string) {
+    if (typeof window === 'undefined' || !(window as any).EventSource) return;
+
+    if (this.eventSource) {
+      try {
+        this.eventSource.close();
+      } catch {}
+      this.eventSource = null;
+    }
+
+    try {
+      this.eventSource = new EventSource(
+        `/api/rooms/events?roomId=${encodeURIComponent(roomId)}&userId=${encodeURIComponent(userId)}`
+      );
+
+      this.eventSource.addEventListener('signal', (event: any) => {
+        try {
+          const sig = JSON.parse(event.data);
+          if (sig && sig.id && !this.seenSignalIds.has(sig.id)) {
+            this.seenSignalIds.add(sig.id);
+            if (this.seenSignalIds.size > 200) {
+              const first = this.seenSignalIds.values().next().value;
+              if (first) this.seenSignalIds.delete(first);
+            }
+            this.trigger('webrtc:signal', {
+              senderUserId: sig.senderUserId,
+              targetUserId: sig.targetUserId,
+              signal: sig.signal,
+            });
+          }
+        } catch {}
+      });
+
+      this.eventSource.onerror = () => {
+        // EventSource will automatically reconnect; HTTP sync interval acts as fallback
+      };
+    } catch {
+      // Fallback to HTTP polling
+    }
+  }
+
   public leaveRoom(roomId: string, userId: string) {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
@@ -279,6 +327,12 @@ class RealtimeClient {
     if (this.serverSyncInterval) {
       clearInterval(this.serverSyncInterval);
       this.serverSyncInterval = null;
+    }
+    if (this.eventSource) {
+      try {
+        this.eventSource.close();
+      } catch {}
+      this.eventSource = null;
     }
 
     // Broadcast leave

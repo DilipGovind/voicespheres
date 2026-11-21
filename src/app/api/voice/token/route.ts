@@ -7,6 +7,9 @@ export const runtime = 'edge';
 // Maximum capacity for small-group worldwide testing
 const DEFAULT_MAX_PARTICIPANTS = 12;
 
+// In-memory rate limiting map for private room passcode brute-force protection
+const failedPasscodeAttempts = new Map<string, { count: number; lockedUntil: number }>();
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -23,14 +26,36 @@ export async function POST(request: Request) {
 
     // If room is known, validate room-level permissions
     if (room) {
-      // 1. Validate private room passcode
+      // 1. Validate private room passcode with brute-force rate limiting
       if (room.isPrivate) {
+        const rateKey = `${userId}_${roomId}`;
+        const record = failedPasscodeAttempts.get(rateKey);
+        const now = Date.now();
+
+        if (record && record.lockedUntil > now) {
+          const waitSecs = Math.ceil((record.lockedUntil - now) / 1000);
+          return NextResponse.json(
+            {
+              error: `Too many incorrect passcode attempts. Please wait ${waitSecs} seconds before retrying.`,
+              code: 'RATE_LIMITED',
+            },
+            { status: 429 }
+          );
+        }
+
         if (!passcode || passcode !== room.passcode) {
+          const currentCount = (record?.count || 0) + 1;
+          const lockedUntil = currentCount >= 4 ? now + 15000 : 0;
+          failedPasscodeAttempts.set(rateKey, { count: currentCount, lockedUntil });
+
           return NextResponse.json(
             { error: 'Invalid or missing passcode for private room', code: 'UNAUTHORIZED_PRIVATE_ROOM' },
             { status: 403 }
           );
         }
+
+        // Passcode succeeded: clear rate limiter
+        failedPasscodeAttempts.delete(rateKey);
       }
 
       // 2. Validate room lock state

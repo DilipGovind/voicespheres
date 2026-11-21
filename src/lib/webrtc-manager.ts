@@ -3,6 +3,8 @@ export class WebRTCManager {
   private peerConnections: Map<string, RTCPeerConnection> = new Map();
   private remoteAudioElements: Map<string, HTMLAudioElement> = new Map();
   private remoteAudioSources: Map<string, MediaStreamAudioSourceNode> = new Map();
+  private remotePanners: Map<string, PannerNode> = new Map();
+  private spatialAudioEnabled = true;
   private pendingCandidates: Map<string, RTCIceCandidateInit[]> = new Map();
   private isMuted = false;
   private audioDestination: MediaStreamAudioDestinationNode | null = null;
@@ -162,6 +164,55 @@ export class WebRTCManager {
       });
     } catch (e) {
       console.warn('[WebRTCManager] Could not play test chime:', e);
+    }
+  }
+
+  public setSpatialAudioEnabled(enabled: boolean) {
+    this.spatialAudioEnabled = enabled;
+    this.remotePanners.forEach((panner, peerId) => {
+      this.applySpatialPosition(panner, peerId);
+    });
+  }
+
+  public getSpatialAudioEnabled(): boolean {
+    return this.spatialAudioEnabled;
+  }
+
+  private applySpatialPosition(panner: PannerNode, peerId: string) {
+    if (!this.audioContext) return;
+    const now = this.audioContext.currentTime;
+
+    if (!this.spatialAudioEnabled) {
+      // Centered position (no azimuth offset)
+      if (panner.positionX) {
+        panner.positionX.setValueAtTime(0, now);
+        panner.positionY.setValueAtTime(0, now);
+        panner.positionZ.setValueAtTime(-1, now);
+      } else {
+        (panner as any).setPosition?.(0, 0, -1);
+      }
+      return;
+    }
+
+    // Deterministic 3D azimuth position: spread peers across stereo field (-55° to +55°)
+    let hash = 0;
+    for (let i = 0; i < peerId.length; i++) {
+      hash = (hash << 5) - hash + peerId.charCodeAt(i);
+      hash |= 0;
+    }
+    const angles = [-45, 45, -30, 30, -55, 55, -15, 15, 0];
+    const angleDeg = angles[Math.abs(hash) % angles.length];
+    const rad = (angleDeg * Math.PI) / 180;
+    const x = Math.sin(rad) * 2;
+    const y = 0;
+    const z = -Math.cos(rad) * 2;
+
+    if (panner.positionX) {
+      panner.positionX.setValueAtTime(x, now);
+      panner.positionY.setValueAtTime(y, now);
+      panner.positionZ.setValueAtTime(z, now);
+    } else {
+      (panner as any).setPosition?.(x, y, z);
     }
   }
 
@@ -437,7 +488,7 @@ export class WebRTCManager {
   private attachRemoteAudio(remoteUserId: string, stream: MediaStream) {
     if (typeof window === 'undefined') return;
 
-    // 1. Web Audio API Stream Routing with garbage-collection protection
+    // 1. Web Audio API Stream Routing with 3D HRTF Spatial Positioning & GC protection
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtx) {
@@ -453,12 +504,31 @@ export class WebRTCManager {
             existingSource.disconnect();
           } catch {}
         }
+        const existingPanner = this.remotePanners.get(remoteUserId);
+        if (existingPanner) {
+          try {
+            existingPanner.disconnect();
+          } catch {}
+        }
+
         const source = this.audioContext.createMediaStreamSource(stream);
-        source.connect(this.audioContext.destination);
+        const panner = this.audioContext.createPanner();
+        panner.panningModel = 'HRTF';
+        panner.distanceModel = 'inverse';
+        panner.refDistance = 1;
+        panner.maxDistance = 10000;
+        panner.rolloffFactor = 1;
+
+        this.applySpatialPosition(panner, remoteUserId);
+
+        source.connect(panner);
+        panner.connect(this.audioContext.destination);
+
         this.remoteAudioSources.set(remoteUserId, source);
+        this.remotePanners.set(remoteUserId, panner);
       }
     } catch (err) {
-      console.warn('[WebRTCManager] Web Audio stream routing note:', err);
+      console.warn('[WebRTCManager] Web Audio spatial routing note:', err);
     }
 
     // 2. HTML5 Audio Element with PlaysInline and Autoplay policy detection
@@ -525,6 +595,14 @@ export class WebRTCManager {
       this.remoteAudioSources.delete(remoteUserId);
     }
 
+    const panner = this.remotePanners.get(remoteUserId);
+    if (panner) {
+      try {
+        panner.disconnect();
+      } catch {}
+      this.remotePanners.delete(remoteUserId);
+    }
+
     const audioEl = this.remoteAudioElements.get(remoteUserId);
     if (audioEl) {
       audioEl.pause();
@@ -558,6 +636,13 @@ export class WebRTCManager {
       } catch {}
     });
     this.remoteAudioSources.clear();
+
+    this.remotePanners.forEach((p) => {
+      try {
+        p.disconnect();
+      } catch {}
+    });
+    this.remotePanners.clear();
 
     if (this.micMonitorGain) {
       try {

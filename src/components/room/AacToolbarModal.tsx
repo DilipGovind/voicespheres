@@ -22,6 +22,10 @@ import {
   Play,
   Hand,
   Settings,
+  Download,
+  Upload,
+  Sparkles,
+  Copy,
 } from 'lucide-react';
 
 interface AacToolbarModalProps {
@@ -166,6 +170,45 @@ export function AacToolbarModal({
       localStorage.setItem('voicesphere_aac_custom', JSON.stringify(updated));
     } catch {
       // ignore
+    }
+  };
+
+  const handleLoadEssentialPresets = () => {
+    const presets: AACCustomPhrase[] = [
+      { id: 'preset_typing', text: 'Please wait a moment, typing my thoughts.', category: 'custom', createdAt: Date.now() },
+      { id: 'preset_audio_issue', text: 'I am experiencing audio difficulty, participating via text.', category: 'custom', createdAt: Date.now() + 1 },
+      { id: 'preset_thank_space', text: 'Thank you for holding space for non-speaking communicators.', category: 'custom', createdAt: Date.now() + 2 },
+      { id: 'preset_support_point', text: 'Brilliant point, I completely support this perspective.', category: 'custom', createdAt: Date.now() + 3 },
+      { id: 'preset_sensory_break', text: 'Taking a brief sensory break, listening with camera/mic off.', category: 'custom', createdAt: Date.now() + 4 },
+    ];
+    const merged = [...presets, ...customPhrases.filter((p) => !presets.some((pr) => pr.text === p.text))];
+    setCustomPhrases(merged);
+    try {
+      localStorage.setItem('voicesphere_aac_custom', JSON.stringify(merged));
+    } catch {}
+    announce('Loaded community essential AAC phrases', 'polite');
+  };
+
+  const handleExportBoard = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(customPhrases, null, 2));
+      announce('Custom AAC phrase board copied to clipboard as JSON', 'polite');
+    } catch {
+      announce('Could not export to clipboard', 'assertive');
+    }
+  };
+
+  const handleImportBoard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed)) {
+        setCustomPhrases(parsed);
+        localStorage.setItem('voicesphere_aac_custom', JSON.stringify(parsed));
+        announce('Successfully imported custom AAC phrases from clipboard', 'polite');
+      }
+    } catch {
+      announce('Clipboard did not contain valid AAC JSON board data', 'assertive');
     }
   };
 
@@ -354,6 +397,38 @@ export function AacToolbarModal({
                   <Plus className="w-4 h-4 stroke-[2.5]" />
                   <span>Save Phrase</span>
                 </button>
+              </div>
+
+              {/* Quick Actions: Load Presets, Export, Import */}
+              <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={handleLoadEssentialPresets}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 font-bold transition"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Load Community Presets</span>
+                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={handleExportBoard}
+                    title="Copy board to clipboard as JSON"
+                    className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white transition"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy JSON</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportBoard}
+                    title="Import board JSON from clipboard"
+                    className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white transition"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Import JSON</span>
+                  </button>
+                </div>
               </div>
 
               {/* Saved Custom Phrases List */}

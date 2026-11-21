@@ -12,6 +12,7 @@ import { AACSpeechEngine } from '@/lib/aac-speech-engine';
 import { IVoiceAdapter, VoiceConnectionState } from '@/lib/voice/voice-adapter.interface';
 import { getVoiceAdapter } from '@/lib/voice/adapter-factory';
 import { AICompanionService, AI_COMPANION_PARTICIPANT } from '@/lib/ai-companion';
+import { wakeLockManager } from '@/lib/wake-lock';
 // Components
 import { VoiceConnectionBanner } from './VoiceConnectionBanner';
 import { StageStructuredBar } from './StageStructuredBar';
@@ -221,6 +222,9 @@ export function VoiceRoomView({
     // Connect to cross-device cloud mesh and start presence heartbeats
     realtimeClient.joinRoom(room.id, currentUser);
 
+    // Keep mobile screen awake to maintain continuous background WebRTC audio
+    wakeLockManager.acquire().catch(() => {});
+
     // 1. Wire up WebRTC signaling sender
     webRTCManager.setSignalSender((targetUserId, signal) => {
       realtimeClient.sendSignal(targetUserId, signal);
@@ -402,6 +406,7 @@ export function VoiceRoomView({
       captionEngineRef.current?.stop();
       audioMeterRef.current?.stop();
       webRTCManager.stopLocalStream();
+      wakeLockManager.release();
       realtimeClient.leaveRoom(room.id, currentUserId);
       unsubJoin();
       unsubHeartbeat();

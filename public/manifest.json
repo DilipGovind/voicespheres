@@ -1,0 +1,19 @@
+{
+  "name": "VoiceSphere – Inclusive Global Social Audio",
+  "short_name": "VoiceSphere",
+  "description": "Universal accessible social audio platform for people with and without disabilities.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "categories": ["social", "accessibility", "communication"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
