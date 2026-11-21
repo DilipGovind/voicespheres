@@ -86,4 +86,28 @@ describe('Cross-Device User Data & Sync Architecture', () => {
     unsubUser();
     unsubFeedback();
   });
+
+  it('hydrates and resolves users asynchronously across edge cold-starts via KV mock', async () => {
+    const { findServerUserAsync, registerServerUserAsync, serverUsersMap } = await import('../src/lib/server-users');
+    
+    const edgeUser = {
+      id: 'usr_edge_' + Date.now().toString(36),
+      username: 'edge_cold_' + Date.now().toString(36),
+      displayName: 'Edge Cold User',
+      email: `edge_${Date.now()}@voicesphere.org`,
+      passwordHash: 'EdgeSecretPass!',
+      role: 'member' as const,
+      coinsBalance: 100,
+      trialDaysLeft: 365,
+      createdAt: Date.now(),
+    };
+
+    const ok = await registerServerUserAsync(edgeUser);
+    expect(ok).toBe(true);
+
+    const found = await findServerUserAsync(edgeUser.username);
+    expect(found).toBeDefined();
+    expect(found?.displayName).toBe('Edge Cold User');
+    expect(found?.passwordHash).toBe('EdgeSecretPass!');
+  });
 });

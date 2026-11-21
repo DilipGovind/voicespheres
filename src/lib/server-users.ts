@@ -147,7 +147,103 @@ export async function getCloudflareKv(): Promise<any | null> {
   return null;
 }
 
-async function persistUsersToDisk() {
+let usersHydrated = false;
+let lastHydratedAt = 0;
+
+export async function ensureUsersHydrated(force = false): Promise<void> {
+  const now = Date.now();
+  if (usersHydrated && !force && now - lastHydratedAt < 30000) {
+    return;
+  }
+
+  try {
+    const kv = await getCloudflareKv();
+    if (kv) {
+      const raw = await kv.get('community_users');
+      if (raw) {
+        const list: ServerUserRecord[] = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          list.forEach((u) => {
+            if (u && u.id && u.username) {
+              serverUsersMap.set(u.id, u);
+              serverUsersMap.set(u.username.toLowerCase(), u);
+              if (u.email) serverUsersMap.set(u.email.toLowerCase(), u);
+            }
+          });
+        }
+      }
+    }
+    usersHydrated = true;
+    lastHydratedAt = now;
+  } catch {
+    // Non-fatal edge fallback
+  }
+}
+
+export async function findServerUserAsync(identifier: string): Promise<ServerUserRecord | undefined> {
+  const key = identifier.trim().toLowerCase();
+  let found = serverUsersMap.get(key);
+  if (found) return found;
+
+  // Hydrate from KV and try again
+  await ensureUsersHydrated();
+  found = serverUsersMap.get(key);
+  if (found) return found;
+
+  // Direct partitioned KV lookup for instant O(1) global edge lookups
+  try {
+    const kv = await getCloudflareKv();
+    if (kv) {
+      let targetId = await kv.get('user:lookup:' + key);
+      if (!targetId) {
+        targetId = key;
+      }
+      const rawUser = await kv.get('user:' + targetId);
+      if (rawUser) {
+        const u: ServerUserRecord = JSON.parse(rawUser);
+        if (u && u.id && u.username) {
+          serverUsersMap.set(u.id, u);
+          serverUsersMap.set(u.username.toLowerCase(), u);
+          if (u.email) serverUsersMap.set(u.email.toLowerCase(), u);
+          return u;
+        }
+      }
+    }
+  } catch {}
+
+  return undefined;
+}
+
+export async function registerServerUserAsync(user: ServerUserRecord): Promise<boolean> {
+  const usernameKey = user.username.trim().toLowerCase();
+  const emailKey = user.email.trim().toLowerCase();
+
+  await ensureUsersHydrated();
+
+  if (serverUsersMap.has(usernameKey) || serverUsersMap.has(emailKey)) {
+    return false;
+  }
+
+  // Double check KV lookup in case another edge node recently wrote
+  try {
+    const kv = await getCloudflareKv();
+    if (kv) {
+      const existingUser = await kv.get('user:lookup:' + usernameKey);
+      if (existingUser) return false;
+      const existingEmail = await kv.get('user:lookup:' + emailKey);
+      if (existingEmail) return false;
+    }
+  } catch {}
+
+  serverUsersMap.set(user.id, user);
+  serverUsersMap.set(usernameKey, user);
+  serverUsersMap.set(emailKey, user);
+
+  await persistUsersToDisk(user);
+  return true;
+}
+
+async function persistUsersToDisk(singleUser?: ServerUserRecord) {
   try {
     const seen = new Set<string>();
     const customUsers: ServerUserRecord[] = [];
@@ -163,10 +259,20 @@ async function persistUsersToDisk() {
     });
     const jsonStr = JSON.stringify(customUsers, null, 2);
 
-    // 1. Cloudflare KV binding if configured
+    // 1. Cloudflare KV binding (multi-key partitioned for scalability up to 1GB free)
     const kv = await getCloudflareKv();
     if (kv) {
       await kv.put('community_users', jsonStr).catch(() => {});
+      if (singleUser) {
+        const uJson = JSON.stringify(singleUser);
+        const uName = singleUser.username.trim().toLowerCase();
+        const uEmail = singleUser.email.trim().toLowerCase();
+        await Promise.allSettled([
+          kv.put('user:' + singleUser.id, uJson),
+          kv.put('user:lookup:' + uName, singleUser.id),
+          kv.put('user:lookup:' + uEmail, singleUser.id),
+        ]);
+      }
     }
 
     // 2. Node.js filesystem persistence
@@ -197,7 +303,7 @@ export function registerServerUser(user: ServerUserRecord): boolean {
   serverUsersMap.set(usernameKey, user);
   serverUsersMap.set(emailKey, user);
 
-  persistUsersToDisk();
+  persistUsersToDisk(user);
   return true;
 }
 

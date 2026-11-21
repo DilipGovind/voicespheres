@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { RegisterInput, UserAccount, UserRole } from '@/types/auth';
-import { registerServerUser, findServerUser } from '@/lib/server-users';
+import { registerServerUserAsync, findServerUserAsync } from '@/lib/server-users';
 
 export const runtime = 'edge';
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = findServerUser(cleanUsername) || findServerUser(cleanEmail);
+    const existing = (await findServerUserAsync(cleanUsername)) || (await findServerUserAsync(cleanEmail));
     if (existing) {
       return NextResponse.json(
         { error: 'An account with that username or email already exists.' },
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       lastLoginAt: Date.now(),
     };
 
-    const registered = registerServerUser({ ...newUser, passwordHash: body.password });
+    const registered = await registerServerUserAsync({ ...newUser, passwordHash: body.password });
     if (!registered) {
       return NextResponse.json(
         { error: 'Failed to register account. Username or email taken.' },

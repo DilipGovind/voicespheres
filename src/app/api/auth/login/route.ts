@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { LoginInput } from '@/types/auth';
-import { findServerUser } from '@/lib/server-users';
+import { findServerUserAsync } from '@/lib/server-users';
 
 export const runtime = 'edge';
 
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const found = findServerUser(body.identifier);
+    const found = await findServerUserAsync(body.identifier);
 
     if (!found) {
       return NextResponse.json(

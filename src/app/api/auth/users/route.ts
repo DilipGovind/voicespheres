@@ -1,35 +1,15 @@
 import { NextResponse } from 'next/server';
 import {
   getAllServerUsers,
-  registerServerUser,
+  registerServerUserAsync,
   ServerUserRecord,
-  serverUsersMap,
-  getCloudflareKv,
+  ensureUsersHydrated,
 } from '@/lib/server-users';
 
 export const runtime = 'edge';
 
 export async function GET() {
-  // Hydrate custom registered users from Cloudflare KV if bound
-  try {
-    const kv = await getCloudflareKv();
-    if (kv) {
-      const raw = await kv.get('community_users');
-      if (raw) {
-        const customUsers = JSON.parse(raw);
-        if (Array.isArray(customUsers)) {
-          customUsers.forEach((u: ServerUserRecord) => {
-            if (u && u.id && u.username) {
-              serverUsersMap.set(u.id, u);
-              serverUsersMap.set(u.username.toLowerCase(), u);
-              if (u.email) serverUsersMap.set(u.email.toLowerCase(), u);
-            }
-          });
-        }
-      }
-    }
-  } catch {}
-
+  await ensureUsersHydrated();
   const safeUsers = getAllServerUsers();
 
   return NextResponse.json({
@@ -43,12 +23,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    await ensureUsersHydrated();
+
     if (body.users && Array.isArray(body.users)) {
-      body.users.forEach((u: ServerUserRecord) => {
+      for (const u of body.users) {
         if (u && u.id && u.username) {
-          registerServerUser(u);
+          await registerServerUserAsync(u);
         }
-      });
+      }
     }
 
     const safeUsers = getAllServerUsers();

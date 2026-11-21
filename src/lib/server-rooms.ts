@@ -86,8 +86,70 @@ export async function getCloudflareKv(): Promise<any | null> {
   return null;
 }
 
+let roomsHydrated = false;
+let lastRoomsHydratedAt = 0;
+
+export async function ensureRoomsHydrated(force = false): Promise<void> {
+  const now = Date.now();
+  if (roomsHydrated && !force && now - lastRoomsHydratedAt < 30000) {
+    return;
+  }
+
+  try {
+    const kv = await getCloudflareKv();
+    if (kv) {
+      const raw = await kv.get('community_rooms');
+      if (raw) {
+        const list: Room[] = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          list.forEach((r) => {
+            if (r && r.id) serverRoomsMap.set(r.id, r);
+          });
+        }
+      }
+    }
+    roomsHydrated = true;
+    lastRoomsHydratedAt = now;
+  } catch {}
+}
+
+export async function findServerRoomAsync(roomId: string): Promise<Room | undefined> {
+  let room = serverRoomsMap.get(roomId);
+  if (room) return room;
+
+  await ensureRoomsHydrated();
+  room = serverRoomsMap.get(roomId);
+  if (room) return room;
+
+  try {
+    const kv = await getCloudflareKv();
+    if (kv) {
+      const raw = await kv.get('room:' + roomId);
+      if (raw) {
+        const r: Room = JSON.parse(raw);
+        if (r && r.id) {
+          serverRoomsMap.set(r.id, r);
+          return r;
+        }
+      }
+    }
+  } catch {}
+
+  return undefined;
+}
+
+export async function registerServerRoomAsync(room: Room): Promise<void> {
+  registerServerRoom(room);
+  try {
+    const kv = await getCloudflareKv();
+    if (kv) {
+      await kv.put('room:' + room.id, JSON.stringify(room)).catch(() => {});
+    }
+  } catch {}
+}
+
 // Save custom rooms to disk in Node.js or Cloudflare KV
-export async function persistCustomRoomsToDisk() {
+export async function persistCustomRoomsToDisk(singleRoom?: Room) {
   try {
     const initialIds = new Set(INITIAL_COMMUNITY_ROOMS.map((r) => r.id));
     const customRooms = Array.from(serverRoomsMap.values()).filter((r) => !initialIds.has(r.id));
@@ -97,6 +159,9 @@ export async function persistCustomRoomsToDisk() {
     const kv = await getCloudflareKv();
     if (kv) {
       await kv.put('community_rooms', jsonStr).catch(() => {});
+      if (singleRoom) {
+        await kv.put('room:' + singleRoom.id, JSON.stringify(singleRoom)).catch(() => {});
+      }
     }
 
     // 2. Node.js filesystem persistence

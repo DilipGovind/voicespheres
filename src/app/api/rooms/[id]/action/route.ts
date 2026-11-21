@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Room, Participant } from '@/types/room';
-import { serverRoomsMap } from '@/lib/server-rooms';
+import { serverRoomsMap, findServerRoomAsync } from '@/lib/server-rooms';
 
 export const runtime = 'edge';
 
@@ -39,7 +39,7 @@ export async function POST(
     }
 
     let room: Room;
-    const existing = serverRoomsMap.get(roomId);
+    const existing = await findServerRoomAsync(roomId);
     if (existing) {
       room = existing;
     } else if (roomData && typeof roomData === 'object' && roomData.id) {

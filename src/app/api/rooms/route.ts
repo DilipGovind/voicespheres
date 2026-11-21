@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { Room } from '@/types/room';
 import {
   serverRoomsMap,
-  registerServerRoom,
+  registerServerRoomAsync,
   getRoomsWithLiveParticipants,
-  getCloudflareKv,
+  ensureRoomsHydrated,
+  findServerRoomAsync,
 } from '@/lib/server-rooms';
 
 export const runtime = 'edge';
@@ -13,26 +14,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const roomId = searchParams.get('id');
 
-  // Hydrate custom rooms from Cloudflare KV if bound in production Pages
-  try {
-    const kv = await getCloudflareKv();
-    if (kv) {
-      const raw = await kv.get('community_rooms');
-      if (raw) {
-        const customRooms: Room[] = JSON.parse(raw);
-        if (Array.isArray(customRooms)) {
-          customRooms.forEach((r) => {
-            if (r && r.id) serverRoomsMap.set(r.id, r);
-          });
-        }
-      }
-    }
-  } catch {}
-
+  await ensureRoomsHydrated();
   const allRooms = getRoomsWithLiveParticipants();
 
   if (roomId) {
-    const room = allRooms.find((r) => r.id === roomId) || serverRoomsMap.get(roomId);
+    const room = allRooms.find((r) => r.id === roomId) || (await findServerRoomAsync(roomId));
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
@@ -50,14 +36,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    await ensureRoomsHydrated();
 
     // Support batch registration from client sync
     if (body.batch && Array.isArray(body.batch)) {
-      body.batch.forEach((r: Room) => {
+      for (const r of body.batch) {
         if (r && r.id && r.name) {
-          registerServerRoom(r);
+          await registerServerRoomAsync(r);
         }
-      });
+      }
       const allRooms = getRoomsWithLiveParticipants();
       return NextResponse.json({
         status: 'synced',
@@ -75,7 +62,7 @@ export async function POST(request: Request) {
       );
     }
 
-    registerServerRoom(newRoom);
+    await registerServerRoomAsync(newRoom);
 
     const allRooms = getRoomsWithLiveParticipants();
 

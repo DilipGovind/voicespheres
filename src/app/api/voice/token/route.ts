@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { AccessToken } from 'livekit-server-sdk';
-import { serverRoomsMap } from '@/lib/server-rooms';
+import { findServerRoomAsync } from '@/lib/server-rooms';
 
 export const runtime = 'edge';
 
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const room = serverRoomsMap.get(roomId);
+    const room = await findServerRoomAsync(roomId);
 
     // If room is known, validate room-level permissions
     if (room) {
