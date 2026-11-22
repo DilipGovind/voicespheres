@@ -46,6 +46,17 @@ export function Footer() {
           </span>
 
           <a
+            href="https://github.com/DilipGovind/voicespheres"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 font-bold transition hover:scale-105"
+            title="View VoiceSpheres on GitHub"
+          >
+            <Github className="w-3.5 h-3.5 text-white" />
+            <span>GitHub</span>
+          </a>
+
+          <a
             href="/voicesphere.apk"
             download="voicesphere.apk"
             className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold transition hover:scale-105"
