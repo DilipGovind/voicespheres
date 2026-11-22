@@ -59,6 +59,30 @@
     }
   </style>
   <script>
+    // Global SpeechSynthesis and SpeechRecognition polyfill for Android WebView
+    (function() {
+      try {
+        if (!window.speechSynthesis) {
+          window.speechSynthesis = {
+            speaking: false, paused: false, pending: false, onvoiceschanged: null,
+            getVoices: function() { return []; },
+            speak: function(u) { if (u && u.onend) setTimeout(u.onend, 50); },
+            cancel: function() {}, pause: function() {}, resume: function() {}
+          };
+        } else if (typeof window.speechSynthesis.getVoices !== 'function') {
+          window.speechSynthesis.getVoices = function() { return []; };
+        }
+        if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+          var DummyRec = function() {
+            this.continuous = false; this.interimResults = false; this.lang = 'en-US';
+            this.onstart = null; this.onend = null; this.onerror = null; this.onresult = null;
+            this.start = function() {}; this.stop = function() {}; this.abort = function() {};
+          };
+          window.SpeechRecognition = DummyRec;
+          window.webkitSpeechRecognition = DummyRec;
+        }
+      } catch(e) {}
+    })();
     window.location.href = "https://voicesphere.pages.dev";
   </script>
 </head>

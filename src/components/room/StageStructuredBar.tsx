@@ -51,8 +51,8 @@ export function StageStructuredBar({
   const seconds = secondsRemaining % 60;
   const timerDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-  const queuedParticipants = queue
-    .map((id) => participants.find((p) => p.id === id))
+  const queuedParticipants = (queue || [])
+    .map((id) => (participants || []).find((p) => p.id === id))
     .filter(Boolean) as Participant[];
 
   const handleNextStage = () => {

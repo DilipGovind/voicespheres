@@ -51,7 +51,7 @@ export function ParticipantGrid({
   const { settings } = useAccessibility();
 
   // Filter out blocked users from view if desired, or show them with blocked banner
-  const visibleParticipants = participants.filter((p) => !blockedUserIds.has(p.id));
+  const visibleParticipants = (participants || []).filter((p) => !blockedUserIds?.has(p.id));
 
   const speakers = visibleParticipants.filter(
     (p) => p.role === 'host' || p.role === 'moderator' || p.role === 'speaker'

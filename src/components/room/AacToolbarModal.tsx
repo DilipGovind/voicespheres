@@ -66,11 +66,16 @@ export function AacToolbarModal({
 
   // Fetch speech synthesis voices
   useEffect(() => {
-    const engine = AACSpeechEngine.getInstance();
-    const available = engine.getVoices();
-    setVoices(available);
-    if (available.length > 0 && !selectedVoice) {
-      setSelectedVoice(available[0].voiceURI);
+    try {
+      const engine = AACSpeechEngine.getInstance();
+      const available = engine.getVoices() || [];
+      setVoices(available);
+      if (available.length > 0 && !selectedVoice) {
+        setSelectedVoice(available[0]?.voiceURI || '');
+      }
+    } catch (e) {
+      console.warn('[AacToolbar] Could not initialize speech voices:', e);
+      setVoices([]);
     }
   }, [selectedVoice]);
 

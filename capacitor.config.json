@@ -8,6 +8,8 @@
     "cleartext": false,
     "allowNavigation": [
       "voicesphere.pages.dev",
+      "*.voicesphere.pages.dev",
+      "*.pages.dev",
       "*.livekit.cloud",
       "*.cloudflare.com"
     ]

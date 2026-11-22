@@ -14,6 +14,7 @@ import { RoomDiscovery } from '@/components/discovery/RoomDiscovery';
 import { CreateRoomModal } from '@/components/discovery/CreateRoomModal';
 import { RoomLobbyPreview } from '@/components/room/RoomLobbyPreview';
 import { VoiceRoomView } from '@/components/room/VoiceRoomView';
+import { VoiceRoomErrorBoundary } from '@/components/common/VoiceRoomErrorBoundary';
 import { UserProfileModal } from '@/components/profile/UserProfileModal';
 import { ShareRoomModal } from '@/components/room/ShareRoomModal';
 import { PrivacyNoticeModal } from '@/components/safety/PrivacyNoticeModal';
@@ -131,13 +132,17 @@ export default function Home() {
   // Sync URL query parameter without page reload
   const updateUrlRoomParam = (roomId: string | null) => {
     if (typeof window === 'undefined') return;
-    const url = new URL(window.location.href);
-    if (roomId) {
-      url.searchParams.set('room', roomId);
-    } else {
-      url.searchParams.delete('room');
+    try {
+      const url = new URL(window.location.href);
+      if (roomId) {
+        url.searchParams.set('room', roomId);
+      } else {
+        url.searchParams.delete('room');
+      }
+      window.history.pushState({}, '', url.toString());
+    } catch {
+      // Safe fallback for restricted WebViews or Capacitor environments
     }
-    window.history.pushState({}, '', url.toString());
   };
 
   useEffect(() => {
@@ -386,14 +391,20 @@ export default function Home() {
           inRoom={true}
         />
 
-        <VoiceRoomView
-          room={activeRoom}
-          currentUserId={currentUserId}
-          currentUserName={currentUserName}
-          initialRole={initialRole}
+        <VoiceRoomErrorBoundary
+          roomName={activeRoom.name}
           onLeaveRoom={handleLeaveRoom}
           onOpenAccessibility={() => setIsA11yCenterOpen(true)}
-        />
+        >
+          <VoiceRoomView
+            room={activeRoom}
+            currentUserId={currentUserId}
+            currentUserName={currentUserName}
+            initialRole={initialRole}
+            onLeaveRoom={handleLeaveRoom}
+            onOpenAccessibility={() => setIsA11yCenterOpen(true)}
+          />
+        </VoiceRoomErrorBoundary>
 
         <AccessibilityCenterModal
           isOpen={isA11yCenterOpen}

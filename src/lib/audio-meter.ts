@@ -15,6 +15,10 @@ export class AudioMeter {
     this.stop();
     this.onLevelCallback = onLevel;
 
+    if (!stream || typeof stream.getAudioTracks !== 'function' || stream.getAudioTracks().length === 0) {
+      return;
+    }
+
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;

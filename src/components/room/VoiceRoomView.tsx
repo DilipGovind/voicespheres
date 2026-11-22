@@ -63,15 +63,15 @@ export function VoiceRoomView({
   const { t } = useI18n();
 
   // Room state
-  const [participants, setParticipants] = useState<Participant[]>(room.participants);
+  const [participants, setParticipants] = useState<Participant[]>(room?.participants || []);
   const [isMuted, setIsMuted] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [captions, setCaptions] = useState<LiveCaptionItem[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessageItem[]>([]);
-  const [currentStage, setCurrentStage] = useState<StructuredStage>(room.structuredStage.currentStage);
-  const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(room.structuredStage.activeSpeakerId);
-  const [queue, setQueue] = useState<string[]>(room.structuredStage.queue);
-  const [isRoomLocked, setIsRoomLocked] = useState<boolean>(!!(room as any).isLocked);
+  const [currentStage, setCurrentStage] = useState<StructuredStage>(room?.structuredStage?.currentStage || 'DISCUSSION');
+  const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(room?.structuredStage?.activeSpeakerId || null);
+  const [queue, setQueue] = useState<string[]>(room?.structuredStage?.queue || []);
+  const [isRoomLocked, setIsRoomLocked] = useState<boolean>(!!(room as any)?.isLocked);
 
   // Safety & Blocking
   const [personallyMutedUserIds, setPersonallyMutedUserIds] = useState<Set<string>>(new Set());
@@ -105,20 +105,21 @@ export function VoiceRoomView({
   const audioMeterRef = useRef<AudioMeter | null>(null);
   const activeAdapterRef = useRef<IVoiceAdapter | null>(null);
 
-  const currentUser: Participant = participants.find((p) => p.id === currentUserId) || {
-    id: currentUserId,
-    name: currentUserName,
-    avatar: currentUserName.slice(0, 2).toUpperCase(),
-    role: initialRole,
+  const safeName = currentUserName || 'InclusiveVoice';
+  const currentUser: Participant = (participants || []).find((p) => p.id === currentUserId) || {
+    id: currentUserId || 'guest_user',
+    name: safeName,
+    avatar: safeName.slice(0, 2).toUpperCase(),
+    role: initialRole || 'speaker',
     isMuted: false,
     isSpeaking: false,
     isHandRaised: false,
-    isAacUser: settings.aacEnabled,
+    isAacUser: !!settings.aacEnabled,
     volume: 100,
     joinedAt: Date.now(),
   };
 
-  const isHost = room.hostId === currentUserId || currentUser.role === 'host';
+  const isHost = (room?.hostId && currentUserId && room.hostId === currentUserId) || currentUser.role === 'host';
   const isHostOrMod = isHost || currentUser.role === 'moderator';
   const isSpeaker = isHostOrMod || currentUser.role === 'speaker';
 
@@ -318,7 +319,7 @@ export function VoiceRoomView({
     });
 
     // 4. Connect WebRTC peer audio to all existing participants in the room
-    (room.participants || []).forEach((p) => {
+    (room?.participants || []).forEach((p) => {
       if (p.id !== currentUserId) {
         webRTCManager.connectPeer(currentUserId, p.id);
       }
