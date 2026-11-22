@@ -41,6 +41,7 @@ yarn-error.log*
 public/voicesphere*.apk
 public/voicesphere*.aab
 public/voicesphere*.idsig
+store-assets/
 
 # typescript
 *.tsbuildinfo
