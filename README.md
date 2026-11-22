@@ -1,15 +1,23 @@
-# VoiceSphere 🌐
+# VoiceSpheres (VoiceSphere) 🌐
 ### Global Accessible Voice Community – Free, Privacy-First, Worldwide-Testable MVP
+
+<p align="center">
+  <img src="public/store-assets/featured_banner_1024x500.png" alt="VoiceSpheres Banner" width="100%" style="border-radius: 8px;" />
+</p>
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Accessibility: WCAG 2.2 AAA](https://img.shields.io/badge/Accessibility-WCAG_2.2_AAA-brightgreen.svg)](ACCESSIBILITY.md)
 [![Next.js 14](https://img.shields.io/badge/Next.js-14.2.15-black.svg)](https://nextjs.org/)
 [![Voice: LiveKit WebRTC](https://img.shields.io/badge/Voice-LiveKit_WebRTC-blueviolet.svg)](https://livekit.io/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-DilipGovind%2Fvoicespheres-181717.svg?logo=github)](https://github.com/DilipGovind/voicespheres)
 [![Vercel Ready](https://img.shields.io/badge/Deploy-Vercel-success.svg)](https://vercel.com)
 
 > **"Every person deserves a voice, whether expressed through speech, text, technology, or assistive communication."**
 
-VoiceSphere is a browser-based, accessible social audio voice-room platform inspired by Clubhouse and Twitter Spaces. Designed from day one for both neurotypical users and people with disabilities (PWD), it couples high-performance WebRTC audio with universal accessibility, Augmentative & Alternative Communication (AAC), live speech captions, safe guest onboarding, and decoupled payment/trial mock mechanics.
+**VoiceSpheres** (also known as **VoiceSphere**) is a modern, browser-based, open-source social audio platform inspired by Clubhouse and Twitter Spaces. Engineered from day one for universal accessibility and high-concurrency real-time audio, it brings together neurodivergent individuals, people with disabilities (PWD), and global audio communities.
+
+🔗 **Repository**: [https://github.com/DilipGovind/voicespheres](https://github.com/DilipGovind/voicespheres)  
+🏷️ **Keywords**: `voicespheres`, `voicesphere`, `social-audio`, `clubhouse-alternative`, `twitter-spaces-alternative`, `webrtc`, `livekit`, `accessibility`, `wcag-2.2-aaa`, `aac`, `nextjs`, `realtime-voice`
 
 ---
 
