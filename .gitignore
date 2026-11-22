@@ -17,6 +17,9 @@ node_modules
 .DS_Store
 *.pem
 scratch/
+*.zip
+logs/
+repo/
 
 # debug
 npm-debug.log*
@@ -30,6 +33,14 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# Android binaries
+*.apk
+*.aab
+*.idsig
+public/voicesphere*.apk
+public/voicesphere*.aab
+public/voicesphere*.idsig
 
 # typescript
 *.tsbuildinfo

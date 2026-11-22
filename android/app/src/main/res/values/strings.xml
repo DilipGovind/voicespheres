@@ -4,4 +4,15 @@
     <string name="title_activity_main">VoiceSphere</string>
     <string name="package_name">com.voicesphere.app</string>
     <string name="custom_url_scheme">com.voicesphere.app</string>
+    <!-- Google Publisher & AdSense Customer IDs -->
+    <string name="admob_publisher_id">pub-3988357163009655</string>
+    <string name="adsense_customer_id">357-945-9110</string>
+    <!-- Google AdMob Application ID (Official Production App ID) -->
+    <string name="admob_app_id">ca-app-pub-3988357163009655~5124464939</string>
+    <!-- Google AdMob Banner Ad Unit ID -->
+    <string name="admob_banner_id">ca-app-pub-3988357163009655/9982487053</string>
+    <!-- Google AdMob Interstitial Ad Unit ID (Room Exit Transition) -->
+    <string name="admob_interstitial_id">ca-app-pub-3988357163009655/7356323716</string>
+    <!-- Google AdMob Rewarded Video Ad Unit ID (Community Supporter Badge) -->
+    <string name="admob_rewarded_id">ca-app-pub-3988357163009655/7909364192</string>
 </resources>

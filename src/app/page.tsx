@@ -26,6 +26,7 @@ import { PlatformFeatures } from '@/components/home/PlatformFeatures';
 import { HowItWorks } from '@/components/home/HowItWorks';
 import { deserializeRoomFromUrl } from '@/lib/room-serializer';
 import { realtimeClient } from '@/lib/socket-client';
+import { admobService } from '@/lib/admob-service';
 import {
   Radio,
   Sliders,
@@ -299,6 +300,15 @@ export default function Home() {
     } catch {}
   }, []);
 
+  // AdMob Banner Lifecycle: show on home/discovery, hide when active in a voice room
+  useEffect(() => {
+    if (activeRoom) {
+      admobService.hideBanner().catch(() => {});
+    } else {
+      admobService.showBanner(false).catch(() => {});
+    }
+  }, [activeRoom]);
+
   const handleSelectRoom = (room: Room) => {
     announce(`Opened preview for ${room.name}`, 'polite');
     setPreviewingRoom(room);
@@ -374,6 +384,8 @@ export default function Home() {
     } catch {}
     setActiveRoom(null);
     updateUrlRoomParam(null);
+    // Show interstitial on natural exit from a room (guarded by 5-minute cooldown)
+    admobService.showInterstitial('room_exit').catch(() => {});
   };
 
   // If currently inside an active room, render VoiceRoomView
@@ -432,7 +444,7 @@ export default function Home() {
 
   // Home / Discovery View
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100 pb-14 sm:pb-0">
       <Navbar
         onOpenAccessibility={() => setIsA11yCenterOpen(true)}
         onCreateRoom={() => setIsCreateRoomOpen(true)}

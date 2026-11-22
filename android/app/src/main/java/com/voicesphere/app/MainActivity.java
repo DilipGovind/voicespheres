@@ -63,6 +63,17 @@ public class MainActivity extends BridgeActivity {
 
         // 5. Check / request initial microphone permission
         checkMicrophonePermission();
+
+        // 6. Safe MobileAds SDK Initialization
+        initializeMobileAds();
+    }
+
+    private void initializeMobileAds() {
+        try {
+            com.google.android.gms.ads.MobileAds.initialize(this, initializationStatus -> {});
+        } catch (Throwable ignored) {
+            // Graceful fallback if Google Play Services are unavailable
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -87,7 +98,8 @@ public class MainActivity extends BridgeActivity {
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(webView, true);
 
-        WebView.setWebContentsDebuggingEnabled(true);
+        // Security: Enable WebView debugging ONLY in Debug builds, disable in Release builds
+        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
 
         // Custom WebChromeClient to reliably grant WebRTC audio capture
         webView.setWebChromeClient(new BridgeWebChromeClient(getBridge()) {

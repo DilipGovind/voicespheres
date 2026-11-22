@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '@/lib/accessibility-context';
 import { useAuth } from '@/lib/auth-context';
 import { useModalDismiss } from '@/hooks/useModalDismiss';
-import { User, Shield, Download, Trash2, X, Check, Lock, Sparkles, LogIn } from 'lucide-react';
+import { User, Shield, Download, Trash2, X, Check, Lock, Sparkles, LogIn, Award } from 'lucide-react';
+import { admobService } from '@/lib/admob-service';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -25,6 +26,38 @@ export function UserProfileModal({
   const [pronouns, setPronouns] = useState(user?.pronouns || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSupporter, setIsSupporter] = useState(false);
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+
+  useEffect(() => {
+    try {
+      setIsSupporter(localStorage.getItem('voicesphere_supporter_badge') === 'true');
+    } catch {}
+  }, [isOpen]);
+
+  const handleWatchSupporterAd = async () => {
+    if (isSupporter) {
+      announce('You already have the Community Supporter badge! Thank you for your support.', 'polite');
+      return;
+    }
+
+    setIsWatchingAd(true);
+    announce('Loading optional sponsor video to support VoiceSphere...', 'polite');
+
+    const shown = await admobService.showRewarded((reward) => {
+      setIsSupporter(true);
+      try {
+        localStorage.setItem('voicesphere_supporter_badge', 'true');
+      } catch {}
+      announce('Thank you! Community Supporter badge unlocked.', 'assertive');
+    });
+
+    if (!shown) {
+      // If on web or ad unavailable, gracefully inform user
+      announce('Reward sponsor video is available in the VoiceSphere Android app.', 'polite');
+    }
+    setIsWatchingAd(false);
+  };
 
   useEffect(() => {
     if (user) {
@@ -136,6 +169,12 @@ export function UserProfileModal({
                     {user.role}
                   </span>
                 )}
+                {isSupporter && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 flex items-center space-x-1">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    <span>Supporter</span>
+                  </span>
+                )}
               </div>
               <p className="text-xs text-zinc-400">
                 {user ? `@${user.username} • Free Member` : 'Zero tracking, privacy-first local identity'}
@@ -220,6 +259,37 @@ export function UserProfileModal({
             <p>
               Your disability or accessibility preferences are stored locally in your browser and never sold or shared with third parties.
             </p>
+          </div>
+
+          {/* Optional Community Support (Rewarded Ad) */}
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1.5 rtl:space-x-reverse text-amber-300 font-bold text-xs">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Support VoiceSphere (Optional)</span>
+              </div>
+              {isSupporter && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Active Supporter
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-zinc-300 leading-relaxed">
+              {isSupporter
+                ? 'Thank you! You have supported VoiceSphere and unlocked the Community Supporter badge on your profile. All voice and accessibility features remain completely free for everyone.'
+                : 'Watch an optional short sponsor video to help fund VoiceSphere’s free WebRTC voice servers and unlock the Community Supporter badge. Essential accessibility features are never locked.'}
+            </p>
+            {!isSupporter && (
+              <button
+                type="button"
+                onClick={handleWatchSupporterAd}
+                disabled={isWatchingAd}
+                className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition shadow flex items-center justify-center space-x-1.5 disabled:opacity-50"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>{isWatchingAd ? 'Loading Sponsor Video...' : 'Watch Video & Unlock Supporter Badge'}</span>
+              </button>
+            )}
           </div>
 
           {/* Actions */}
