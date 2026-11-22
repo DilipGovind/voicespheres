@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     'switch access',
     'inclusive audio',
   ],
+  verification: {
+    google: 'i4VOJluuc1_j9QZqLlqTHUFvASZSPdB7WQA464eb4Jg',
+  },
 };
 
 export default function RootLayout({
