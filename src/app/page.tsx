@@ -21,6 +21,7 @@ import { PrivacyNoticeModal } from '@/components/safety/PrivacyNoticeModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { HeroSection } from '@/components/home/HeroSection';
+import { CommunitySupporterSection } from '@/components/home/CommunitySupporterSection';
 import { CommunityFeedbackSection } from '@/components/feedback/CommunityFeedbackSection';
 import { PlatformFeatures } from '@/components/home/PlatformFeatures';
 import { HowItWorks } from '@/components/home/HowItWorks';
@@ -465,6 +466,9 @@ export default function Home() {
           onOpenFeedback={() => setIsFeedbackOpen(true)}
           totalActiveRooms={rooms.length}
         />
+
+        {/* 1.5 Community Supporter & AdMob Support Section */}
+        <CommunitySupporterSection />
 
         {/* 2. Community Thoughts & Feedback Wall */}
         <CommunityFeedbackSection onOpenFeedback={() => setIsFeedbackOpen(true)} />

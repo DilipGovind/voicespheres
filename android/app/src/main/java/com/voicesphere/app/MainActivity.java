@@ -100,6 +100,9 @@ public class MainActivity extends BridgeActivity {
 
         // Security: Enable WebView debugging ONLY in Debug builds, disable in Release builds
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
+        if (BuildConfig.DEBUG) {
+            webView.clearCache(true);
+        }
 
         // Custom WebChromeClient to reliably grant WebRTC audio capture
         webView.setWebChromeClient(new BridgeWebChromeClient(getBridge()) {
@@ -304,6 +307,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void showLoading() {
+        if (overlayContainer != null) overlayContainer.setVisibility(View.VISIBLE);
         if (loadingLayout != null) loadingLayout.setVisibility(View.VISIBLE);
         if (errorLayout != null) errorLayout.setVisibility(View.GONE);
     }
@@ -311,9 +315,11 @@ public class MainActivity extends BridgeActivity {
     private void hideLoading() {
         if (loadingLayout != null) loadingLayout.setVisibility(View.GONE);
         if (errorLayout != null) errorLayout.setVisibility(View.GONE);
+        if (overlayContainer != null) overlayContainer.setVisibility(View.GONE);
     }
 
     private void showError(String msg) {
+        if (overlayContainer != null) overlayContainer.setVisibility(View.VISIBLE);
         if (loadingLayout != null) loadingLayout.setVisibility(View.GONE);
         if (errorSubtitle != null && msg != null) errorSubtitle.setText(msg);
         if (errorLayout != null) errorLayout.setVisibility(View.VISIBLE);
