@@ -1,0 +1,38 @@
+Categories:
+  - Multimedia
+  - Internet
+License: AGPL-3.0-or-later
+AuthorName: Dileep Govindu
+SourceCode: https://github.com/DilipGovind/voicespheres
+IssueTracker: https://github.com/DilipGovind/voicespheres/issues
+
+AutoName: VoiceSphere
+Summary: Accessible social audio with spatial voice rooms and AAC tools
+Description: |-
+    VoiceSphere is an open-source, accessible social audio platform designed
+    to provide inclusive communication for individuals with and without
+    disabilities.
+
+    The application enables participation in live spatial audio rooms with
+    low-latency WebRTC streaming, stage management, and community discovery.
+
+    Key accessibility capabilities include built-in Augmentative and
+    Alternative Communication (AAC) phrase boards with text-to-speech,
+    live captioning, dyslexia reading rulers, switch access navigation,
+    high-contrast visual themes, and screen reader announcements.
+
+RepoType: git
+Repo: https://github.com/DilipGovind/voicespheres.git
+
+Builds:
+  - versionName: '1.0'
+    versionCode: 1
+    commit: v1.0.0
+    subdir: android/app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '1.0'
+CurrentVersionCode: 1
